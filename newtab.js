@@ -4,47 +4,46 @@ document.addEventListener("DOMContentLoaded", () => {
   const leafPile = document.getElementById("leafPile");
   const groundMascot = document.getElementById("groundMascot");
   const groundLeaf = document.getElementById("groundLeaf");
+  const pageTitle = document.getElementById("pageTitle");
+  const hudStatus = document.getElementById("hudStatus");
+  const endBreakBtn = document.getElementById("endBreakBtn");
+  const alarmSound = document.getElementById("alarmSound");
 
   let lastKnownLeaves = null;
   let isGathering = false;
+  let alarmPlayed = false;
 
+  // 1. UPDATE PILE VISUAL STAGE
   function updateLeafPile(count) {
     if (!leafPile) return;
-    // Set stage-0 to stage-5
     leafPile.className = `leaf-pile stage-${count}`;
   }
 
+  // 2. LEAF PICKUP CUTSCENE
   function triggerPickupAnimation(newCount) {
     if (isGathering || !groundMascot || !groundLeaf) return;
     isGathering = true;
 
-    // 1. Drop a leaf on the ground
     groundLeaf.classList.add("active");
-
-    // 2. Mascot runs toward the leaf
     groundMascot.classList.remove("has-leaf");
     groundMascot.classList.add("gathering");
 
-    // 3. At 1.1s: Mascot scoops up the leaf
     setTimeout(() => {
       groundLeaf.classList.remove("active");
       groundMascot.classList.add("has-leaf");
     }, 1100);
 
-    // 4. At 2.5s: Mascot arrives at pile and deposits leaf
     setTimeout(() => {
       groundMascot.classList.remove("has-leaf");
       updateLeafPile(newCount);
 
-      // Bounce leaf pile & show floating +1 text
       leafPile.classList.remove("bounce");
-      void leafPile.offsetWidth; // trigger reflow
+      void leafPile.offsetWidth;
       leafPile.classList.add("bounce");
 
       showFloatingPlusOne();
     }, 2500);
 
-    // 5. At 3.2s: Sequence finishes, resume regular walk
     setTimeout(() => {
       groundMascot.classList.remove("gathering");
       isGathering = false;
@@ -56,24 +55,61 @@ document.addEventListener("DOMContentLoaded", () => {
     floatText.className = "leaf-popup-text";
     floatText.textContent = "+1 🍂";
     document.body.appendChild(floatText);
-
-    setTimeout(() => {
-      floatText.remove();
-    }, 1400);
+    setTimeout(() => floatText.remove(), 1400);
   }
 
+  // 3. ENTER / EXIT ZEN BREAK
+  function setZenBreakMode(active, minutesLeft, secondsLeft) {
+    if (active) {
+      document.body.classList.add("is-break");
+      if (pageTitle) pageTitle.textContent = "Jepi Zen Mode";
+      if (hudStatus) hudStatus.textContent = "Break Time";
+      if (timerElement) {
+        timerElement.textContent = `${minutesLeft}:${String(secondsLeft).padStart(2, "0")}`;
+      }
+      if (leavesDisplay) {
+        leavesDisplay.textContent = "Chill out for a bit";
+      }
+    } else {
+      document.body.classList.remove("is-break");
+      if (pageTitle) pageTitle.textContent = "Jepi's Always Watching....";
+      if (hudStatus) hudStatus.textContent = "Focus Timer";
+    }
+  }
+
+  // 4. MAIN SYNC LOOP
   async function syncDashboard() {
     const data = await chrome.storage.local.get([
       "sessionActive",
       "sessionPaused",
       "sessionEndTime",
-      "studyDuration",
       "pausedRemainingTime",
-      "leafCount"
+      "leafCount",
+      "isBreakActive",
+      "breakEndTime"
     ]);
 
-    // Handle Inactive / Reset state
+    // CHECK A: Is User in an Active Break?
+    if (data.isBreakActive) {
+      const breakRemaining = Math.max(0, (data.breakEndTime || Date.now()) - Date.now());
+      const totalSec = Math.ceil(breakRemaining / 1000);
+      const mins = Math.floor(totalSec / 60);
+      const secs = totalSec % 60;
+
+      if (breakRemaining > 0) {
+        setZenBreakMode(true, mins, secs);
+        return;
+      } else {
+        // Break has finished!
+        await chrome.storage.local.set({ isBreakActive: false });
+        setZenBreakMode(false);
+        alarmPlayed = false;
+      }
+    }
+
+    // CHECK B: Inactive / Idle Timer
     if (!data.sessionActive) {
+      setZenBreakMode(false);
       if (timerElement) timerElement.textContent = "00:00";
       if (leavesDisplay) leavesDisplay.textContent = "Leaves collected: 0 🍃";
       updateLeafPile(0);
@@ -81,7 +117,9 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // 1. Calculate Timer
+    // CHECK C: Active Focus Timer Running
+    setZenBreakMode(false);
+
     let remainingMs = 0;
     if (data.sessionPaused) {
       remainingMs = data.pausedRemainingTime || 0;
@@ -94,34 +132,65 @@ document.addEventListener("DOMContentLoaded", () => {
     const minutesLeft = Math.floor(totalSecondsLeft / 60);
     const secondsLeft = totalSecondsLeft % 60;
 
-    if (timerElement) {
-      timerElement.textContent =
-        minutesLeft + ":" + String(secondsLeft).padStart(2, "0");
+    // TIME'S UP! Start 5-Minute Zen Break
+    if (remainingMs <= 0 && !data.sessionPaused) {
+      if (!alarmPlayed && alarmSound) {
+        alarmSound.play().catch(() => {});
+        alarmPlayed = true;
+      }
+
+      // Automatically launch 5-minute break
+      const breakDuration = 5 * 60 * 1000;
+      await chrome.storage.local.set({
+        sessionActive: false,
+        isBreakActive: true,
+        breakEndTime: Date.now() + breakDuration
+      });
+
+      setZenBreakMode(true, 5, 0);
+      return;
     }
 
-    // 2. Leaf Calculation (0 - 5)
-    let currentLeaves = data.leafCount ?? 0;
+    // Display Focus Timer
+    if (timerElement) {
+      timerElement.textContent = `${minutesLeft}:${String(secondsLeft).padStart(2, "0")}`;
+    }
 
+    // Leaves Management
+    const currentLeaves = data.leafCount ?? 0;
     if (leavesDisplay) {
       leavesDisplay.textContent = `Leaves collected: ${currentLeaves} 🍃`;
     }
 
-    // First load: sync pile immediately without playing animation
     if (lastKnownLeaves === null) {
       lastKnownLeaves = currentLeaves;
       updateLeafPile(currentLeaves);
       return;
     }
 
-    // Trigger animation when a new leaf is awarded
     if (currentLeaves > lastKnownLeaves) {
       triggerPickupAnimation(currentLeaves);
       lastKnownLeaves = currentLeaves;
     } else if (currentLeaves < lastKnownLeaves) {
-      // If timer was reset
       lastKnownLeaves = currentLeaves;
       updateLeafPile(currentLeaves);
     }
+  }
+
+  // 5. "READY TO STUDY" (End Break Button)
+  if (endBreakBtn) {
+    endBreakBtn.addEventListener("click", async () => {
+      await chrome.storage.local.set({
+        isBreakActive: false,
+        sessionActive: false,
+        leafCount: 0
+      });
+      alarmPlayed = false;
+      setZenBreakMode(false);
+      if (timerElement) timerElement.textContent = "00:00";
+      if (leavesDisplay) leavesDisplay.textContent = "Leaves collected: 0 🍃";
+      updateLeafPile(0);
+    });
   }
 
   syncDashboard();

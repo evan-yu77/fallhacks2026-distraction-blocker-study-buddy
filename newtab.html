@@ -1,9 +1,8 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Stay On Track - Autumn Haven</title>
+  <title>Stay On Track - Autumn Haven & Zen Break</title>
   <link rel="stylesheet" href="content.css">
   
   <!-- Pixel Art Google Font -->
@@ -13,25 +12,8 @@
 
   <style>
     /* ==========================================================
-       PIXEL ART RESET & AUTUMN PALETTE
+       PIXEL ART RESET & COLOR PALETTES
        ========================================================== */
-       .ground-mascot {
-    position: absolute;
-    bottom: 28px; /* walks right on top of the dirt line */
-    left: 0;
-    width: 64px;
-    height: 64px;
-    z-index: 6; /* Walks in front of back trees, behind the owl tree */
-    image-rendering: pixelated;
-    animation: 
-        pixelPatrol 20s steps(120) infinite,
-        pixelBob 0.3s steps(2) infinite;
-    }
-
-.ground-mascot img {
-  width: 100%;
-  height: 100%;
-}
     * {
       box-sizing: border-box;
       margin: 0;
@@ -41,6 +23,7 @@
     }
 
     :root {
+      /* Autumn Haven Palette */
       --sky-top: #3b2d54;
       --sky-mid: #9c4f43;
       --sky-bottom: #e59b58;
@@ -54,6 +37,16 @@
       --ui-bg: #fff0d4;
       --ui-border: #27140b;
       --ui-shadow: #c99365;
+
+      /* Zen Garden Break Palette */
+      --zen-sky-top: #2c443b;
+      --zen-sky-mid: #688a75;
+      --zen-sky-bottom: #cbe3d3;
+      --zen-sand: #eae5d8;
+      --zen-sand-shade: #c2baa8;
+      --zen-vermilion: #d9381e;
+      --zen-matcha: #436b36;
+      --zen-sakura: #ff8fb1;
     }
 
     body {
@@ -67,10 +60,11 @@
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
-      padding-top: 50px;
+      padding-top: 45px;
+      transition: background 1.2s ease;
     }
 
-    /* Pixelated Scanline & Dithering Overlay */
+    /* Screen Scanlines */
     body::before {
       content: "";
       position: fixed;
@@ -87,11 +81,57 @@
     }
 
     /* ==========================================================
+       ZEN BREAK MODE TRANSITIONS
+       ========================================================== */
+    body.is-break {
+      background: linear-gradient(180deg, var(--zen-sky-top) 0%, var(--zen-sky-mid) 40%, var(--zen-sky-bottom) 75%, #d5e5db 100%);
+    }
+
+    body.is-break .forest-layer,
+    body.is-break .autumn-leaf {
+      display: none !important;
+    }
+
+    body.is-break .zen-garden-layer,
+    body.is-break .sakura-petal {
+      display: block !important;
+    }
+
+    body.is-break .title-badge {
+      background: #eef7f0;
+      border-color: #1e3328;
+      box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.4), inset -4px -4px 0px #a4c2b0;
+    }
+
+    body.is-break h1.main-title {
+      color: #1c5236;
+      text-shadow: 2px 2px 0px #d4ebd9;
+    }
+
+    body.is-break .timer-container {
+      background: #24382c;
+      border-color: #15241b;
+      outline-color: var(--zen-vermilion);
+      box-shadow: 0 8px 0 0 rgba(0, 0, 0, 0.4), inset -4px -4px 0px #111c15, inset 4px 4px 0px #3d5e4b;
+    }
+
+    body.is-break .timer-container h2 {
+      color: #bbf0cf;
+    }
+
+    body.is-break #timer {
+      color: #ffffff;
+      background: #0e1712;
+      border-color: #2e4d3b;
+      text-shadow: 3px 3px 0px var(--zen-vermilion);
+    }
+
+    /* ==========================================================
        CONTAINER & RETRO UI
        ========================================================== */
     .content-wrapper {
       position: relative;
-      z-index: 10;
+      z-index: 20;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -99,30 +139,27 @@
       max-width: 540px;
     }
 
-    /* Pixel Badge Title */
     .title-badge {
       background: var(--ui-bg);
       border: 4px solid var(--ui-border);
-      box-shadow: 
-        6px 6px 0px rgba(0, 0, 0, 0.4),
-        inset -4px -4px 0px var(--ui-shadow);
+      box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.4), inset -4px -4px 0px var(--ui-shadow);
       padding: 14px 20px;
-      margin-bottom: 24px;
+      margin-bottom: 22px;
       text-align: center;
+      transition: all 0.5s ease;
     }
 
     h1.main-title {
-      font-size: 14px;
+      font-size: 13px;
       line-height: 1.6;
       color: #7b180d;
       text-shadow: 2px 2px 0px #fce2bd;
       letter-spacing: 1px;
     }
 
-    /* Pixel Search Box */
     form {
       width: 100%;
-      margin-bottom: 28px;
+      margin-bottom: 24px;
     }
 
     .search-container {
@@ -140,41 +177,30 @@
       color: var(--wood-dark);
       border: 4px solid var(--wood-dark);
       outline: none;
-      box-shadow: 
-        5px 5px 0px rgba(0, 0, 0, 0.4),
-        inset 3px 3px 0px #deb887;
-    }
-
-    input[type="text"]::placeholder {
-      color: #9f7b60;
+      box-shadow: 5px 5px 0px rgba(0, 0, 0, 0.4), inset 3px 3px 0px #deb887;
     }
 
     input[type="text"]:focus {
       background: #ffffff;
-      box-shadow: 
-        5px 5px 0px #000,
-        inset 3px 3px 0px #f4b41b;
+      box-shadow: 5px 5px 0px #000, inset 3px 3px 0px #f4b41b;
     }
 
-    /* Retro RPG Focus Timer HUD */
+    /* Focus HUD */
     .timer-container {
       width: 100%;
       background: var(--wood-light);
       border: 4px solid var(--wood-dark);
       outline: 4px solid #f4b41b;
-      box-shadow: 
-        0 8px 0 0 rgba(0, 0, 0, 0.4),
-        inset -4px -4px 0px #241108,
-        inset 4px 4px 0px #6d3a24;
-      padding: 24px 20px;
+      box-shadow: 0 8px 0 0 rgba(0, 0, 0, 0.4), inset -4px -4px 0px #241108, inset 4px 4px 0px #6d3a24;
+      padding: 22px 20px;
       text-align: center;
       position: relative;
     }
 
     .timer-container h2 {
-      font-size: 12px;
+      font-size: 11px;
       color: #ffd07d;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
       letter-spacing: 2px;
       text-transform: uppercase;
       text-shadow: 2px 2px 0px #000;
@@ -185,15 +211,15 @@
       color: #fff4d1;
       background: #1e110a;
       border: 4px solid #63331a;
-      padding: 14px 10px;
-      margin-bottom: 16px;
+      padding: 12px 10px;
+      margin-bottom: 14px;
       letter-spacing: 3px;
       text-shadow: 3px 3px 0px #c7381b;
       box-shadow: inset 3px 3px 0px #000000;
     }
 
     #leaves {
-      font-size: 11px;
+      font-size: 10px;
       color: #ffc478;
       text-shadow: 2px 2px 0px #000;
       display: inline-flex;
@@ -203,164 +229,29 @@
       padding: 8px 14px;
       border: 2px dashed #a55a30;
     }
-    /* ==========================================================
-       LEAF PILE & PICKUP ANIMATION STYLES
-       ========================================================== */
-       /* ==========================================================
-       BIGGER RETRO LEAVES & PROMINENT LEAF PILE
-       ========================================================== */
 
-    /* 1. BIGGER FALLING BACKGROUND LEAVES */
-    .leaf {
-      position: fixed;
-      width: 22px;        /* Increased from 10px */
-      height: 22px;
-      pointer-events: none;
-      z-index: 9;
-      animation-name: fallAndDrift;
-      animation-timing-function: linear;
-      animation-iteration-count: infinite;
-      filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.35));
-    }
-
-    /* 2. BIGGER DROPPED GROUND LEAF (Pickup Target) */
-    .ground-pickup-leaf {
-      position: absolute;
-      bottom: 28px;
-      left: 28%;
-      width: 32px;        /* Increased from 16px */
-      height: 32px;
-      z-index: 7;
+    /* Skip/Start Study Button */
+    #endBreakBtn {
       display: none;
-      filter: drop-shadow(0 4px 0px rgba(0, 0, 0, 0.4));
+      margin-top: 14px;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 10px;
+      padding: 12px 16px;
+      color: #fff;
+      background: var(--zen-vermilion);
+      border: 3px solid #1a0e08;
+      box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.4);
+      cursor: pointer;
     }
-
-    .ground-pickup-leaf.active {
-      display: block;
-      animation: dropLeaf 0.45s steps(4) forwards;
+    #endBreakBtn:hover {
+      background: #eb4d34;
     }
-
-    @keyframes dropLeaf {
-      0%   { transform: translateY(-60px) rotate(-90deg) scale(0.5); opacity: 0; }
-      100% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+    body.is-break #endBreakBtn {
+      display: inline-block;
     }
-
-    /* 3. BIGGER HELD LEAF (Carried Above Mascot) */
-    .held-leaf {
-      position: absolute;
-      top: -24px;         /* Raised above his head */
-      left: 16px;
-      width: 32px;        /* Increased from 18px */
-      height: 32px;
-      opacity: 0;
-      pointer-events: none;
-      z-index: 8;
-      filter: drop-shadow(0 2px 0px #000);
-      transition: opacity 0.1s;
-    }
-
-    .ground-mascot.has-leaf .held-leaf {
-      opacity: 1;
-      animation: leafWiggle 0.3s steps(2) infinite;
-    }
-
-    @keyframes leafWiggle {
-      0%, 100% { transform: translateY(0) rotate(0deg); }
-      50%      { transform: translateY(-4px) rotate(6deg); }
-    }
-
-    /* 4. LARGE, ALWAYS-VISIBLE LEAF PILE */
-    .leaf-pile {
-      position: absolute;
-      bottom: 24px;
-      right: 18%;
-      width: 120px;       /* Increased from 52px (more than double!) */
-      height: 72px;        /* Increased from 32px */
-      z-index: 6;
-      filter: drop-shadow(0 6px 0px rgba(0, 0, 0, 0.4));
-      transform-origin: bottom center;
-    }
-
-    .leaf-pile.bounce {
-      animation: pileBounce 0.45s steps(4) 1;
-    }
-
-    @keyframes pileBounce {
-      0%   { transform: scale(1); }
-      40%  { transform: scale(1.3) translateY(-10px); }
-      100% { transform: scale(1); }
-    }
-
-    /* Staging: Base layer is ALWAYS visible so you can see where the pile is! */
-    .leaf-pile .lvl-base { display: block; }
-    .leaf-pile .lvl { display: none; }
-    
-    .leaf-pile.stage-1 .lvl-1 { display: block; }
-    .leaf-pile.stage-2 .lvl-1, .leaf-pile.stage-2 .lvl-2 { display: block; }
-    .leaf-pile.stage-3 .lvl-1, .leaf-pile.stage-3 .lvl-2, .leaf-pile.stage-3 .lvl-3 { display: block; }
-    .leaf-pile.stage-4 .lvl-1, .leaf-pile.stage-4 .lvl-2, .leaf-pile.stage-4 .lvl-3, .leaf-pile.stage-4 .lvl-4 { display: block; }
-    .leaf-pile.stage-5 .lvl { display: block; }
-
-    /* Mascot Gathering Run Adjusted for the Bigger Pile */
-    .ground-mascot.gathering {
-      animation: gatherRun 3.4s steps(80) forwards !important;
-    }
-
-    @keyframes gatherRun {
-      0% {
-        left: 10%;
-        transform: scaleX(1);
-      }
-      25% {
-        left: 26%;
-        transform: scaleX(1);
-      }
-      35% {
-        left: 26%;
-        transform: scaleX(1) translateY(4px); /* Scooping down */
-      }
-      40% {
-        left: 26%;
-        transform: scaleX(1) translateY(0);
-      }
-      45% {
-        left: 30%;
-        transform: scaleX(1);
-      }
-      75% {
-        left: calc(100vw - 18% - 130px); /* Runs right up to the bigger pile */
-        transform: scaleX(1);
-      }
-      82% {
-        left: calc(100vw - 18% - 130px);
-        transform: scaleX(1) translateY(-22px); /* High victory toss jump */
-      }
-      90% {
-        left: calc(100vw - 18% - 130px);
-        transform: scaleX(1) translateY(0);
-      }
-      100% {
-        left: calc(100vw - 18% - 130px);
-        transform: scaleX(-1);
-      }
-    }
-
-    /* Floating "+1 LEAF" Pop Text */
-    .leaf-popup-text {
-      position: absolute;
-      bottom: 105px;
-      right: 19%;
-      color: #ffd043;
-      font-size: 12px;
-      text-shadow: 2px 2px 0px #000;
-      z-index: 20;
-      pointer-events: none;
-      animation: floatBadge 1.4s ease-out forwards;
-    }
-    
 
     /* ==========================================================
-       PIXEL TREES & WIND SWAY ANIMATION
+       AUTUMN SCENERY (ACTIVE DURING STUDY)
        ========================================================== */
     .forest-layer {
       position: fixed;
@@ -372,8 +263,126 @@
       z-index: 5;
     }
 
+    .ground-mascot {
+      position: absolute;
+      bottom: 28px;
+      left: 0;
+      width: 64px;
+      height: 64px;
+      z-index: 6;
+      image-rendering: pixelated;
+      animation: pixelPatrol 20s steps(120) infinite, pixelBob 0.3s steps(2) infinite;
+    }
+    .ground-mascot img { width: 100%; height: 100%; }
 
-    /* Pixel Ground */
+    @keyframes pixelPatrol {
+      0% { transform: translateX(10px) scaleX(1); }
+      48% { transform: translateX(calc(100vw - 110px)) scaleX(1); }
+      50% { transform: translateX(calc(100vw - 110px)) scaleX(-1); }
+      98% { transform: translateX(10px) scaleX(-1); }
+      100% { transform: translateX(10px) scaleX(1); }
+    }
+    @keyframes pixelBob {
+      0%, 100% { margin-bottom: 0px; }
+      50% { margin-bottom: 5px; }
+    }
+
+    /* Leaf Pile & Mascot Animation */
+    .leaf-pile {
+      position: absolute;
+      bottom: 24px;
+      right: 18%;
+      width: 120px;
+      height: 72px;
+      z-index: 6;
+      filter: drop-shadow(0 6px 0px rgba(0, 0, 0, 0.4));
+      transform-origin: bottom center;
+    }
+    .leaf-pile.bounce { animation: pileBounce 0.45s steps(4) 1; }
+    @keyframes pileBounce {
+      0% { transform: scale(1); }
+      40% { transform: scale(1.3) translateY(-10px); }
+      100% { transform: scale(1); }
+    }
+    .leaf-pile .lvl-base { display: block; }
+    .leaf-pile .lvl { display: none; }
+    .leaf-pile.stage-1 .lvl-1 { display: block; }
+    .leaf-pile.stage-2 .lvl-1, .leaf-pile.stage-2 .lvl-2 { display: block; }
+    .leaf-pile.stage-3 .lvl-1, .leaf-pile.stage-3 .lvl-2, .leaf-pile.stage-3 .lvl-3 { display: block; }
+    .leaf-pile.stage-4 .lvl-1, .leaf-pile.stage-4 .lvl-2, .leaf-pile.stage-4 .lvl-3, .leaf-pile.stage-4 .lvl-4 { display: block; }
+    .leaf-pile.stage-5 .lvl { display: block; }
+
+    .ground-pickup-leaf {
+      position: absolute;
+      bottom: 28px;
+      left: 28%;
+      width: 32px;
+      height: 32px;
+      z-index: 7;
+      display: none;
+    }
+    .ground-pickup-leaf.active {
+      display: block;
+      animation: dropLeaf 0.45s steps(4) forwards;
+    }
+    @keyframes dropLeaf {
+      0% { transform: translateY(-60px) rotate(-90deg) scale(0.5); opacity: 0; }
+      100% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+    }
+
+    .held-leaf {
+      position: absolute;
+      top: -24px;
+      left: 16px;
+      width: 32px;
+      height: 32px;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 8;
+    }
+    .ground-mascot.has-leaf .held-leaf {
+      opacity: 1;
+      animation: leafWiggle 0.3s steps(2) infinite;
+    }
+    @keyframes leafWiggle {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px) rotate(6deg); }
+    }
+
+    .ground-mascot.gathering {
+      animation: gatherRun 3.4s steps(80) forwards !important;
+    }
+    @keyframes gatherRun {
+      0% { left: 10%; transform: scaleX(1); }
+      25% { left: 26%; transform: scaleX(1); }
+      35% { left: 26%; transform: scaleX(1) translateY(4px); }
+      40% { left: 26%; transform: scaleX(1) translateY(0); }
+      45% { left: 30%; transform: scaleX(1); }
+      75% { left: calc(100vw - 18% - 130px); transform: scaleX(1); }
+      82% { left: calc(100vw - 18% - 130px); transform: scaleX(1) translateY(-22px); }
+      90% { left: calc(100vw - 18% - 130px); transform: scaleX(1) translateY(0); }
+      100% { left: calc(100vw - 18% - 130px); transform: scaleX(-1); }
+    }
+
+    .leaf-popup-text {
+      position: absolute;
+      bottom: 105px;
+      right: 19%;
+      color: #ffd043;
+      font-size: 12px;
+      text-shadow: 2px 2px 0px #000;
+      z-index: 20;
+      pointer-events: none;
+      animation: floatBadge 1.4s ease-out forwards;
+    }
+    @keyframes floatBadge {
+      0% { transform: translateY(0); opacity: 0; }
+      20% { opacity: 1; }
+      80% { opacity: 1; }
+      100% { transform: translateY(-30px); opacity: 0; }
+    }
+
+    /* Autumn Dirt Ground & Trees */
     .pixel-ground {
       position: absolute;
       bottom: 0;
@@ -385,7 +394,6 @@
       box-shadow: inset 0 -16px 0 0 var(--ground-dark);
       z-index: 6;
     }
-
     .pixel-grass-clumps {
       position: absolute;
       top: -12px;
@@ -396,201 +404,230 @@
         radial-gradient(#d37424 50%, transparent 50%),
         radial-gradient(#7c3614 50%, transparent 50%);
       background-size: 24px 12px;
-      background-position: 0 0, 12px 6px;
     }
+    .tree { position: absolute; bottom: 40px; transform-origin: bottom center; }
+    .tree-left { left: -20px; width: 240px; height: 380px; animation: windSwayLeft 5.5s ease-in-out infinite; z-index: 7; }
+    .tree-right { right: -30px; width: 260px; height: 410px; animation: windSwayRight 6.5s ease-in-out infinite; z-index: 7; }
+    .tree-back-left { left: 18%; bottom: 44px; width: 150px; height: 250px; opacity: 0.65; z-index: 3; }
+    .tree-back-right { right: 17%; bottom: 44px; width: 170px; height: 270px; opacity: 0.65; z-index: 3; }
+    .jeppy-owl { position: absolute; top: 150px; right: 55px; width: 24px; height: 24px; z-index: 8; }
+    .jeppy-eyes { animation: blink 4s infinite; }
+    @keyframes blink { 0%, 94%, 98%, 100% { transform: scaleY(1); } 96% { transform: scaleY(0.1); } }
+    @keyframes windSwayLeft { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-3deg); } }
+    @keyframes windSwayRight { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(3deg); } }
 
-    /* Trees Setup */
-    .tree {
-      position: absolute;
-      bottom: 40px;
-      transform-origin: bottom center;
-    }
-
-    /* Sway Animations (Different speeds for realistic depth) */
-    @keyframes windSwayLeft {
-      0%, 100% {
-        transform: rotate(0deg) skewX(0deg);
-      }
-      35% {
-        transform: rotate(-3deg) skewX(-2deg);
-      }
-      70% {
-        transform: rotate(1.5deg) skewX(1deg);
-      }
-    }
-
-    @keyframes windSwayRight {
-      0%, 100% {
-        transform: rotate(0deg) skewX(0deg);
-      }
-      30% {
-        transform: rotate(3.5deg) skewX(2.5deg);
-      }
-      75% {
-        transform: rotate(-2deg) skewX(-1.5deg);
-      }
-    }
-
-    @keyframes windSwayBack {
-      0%, 100% {
-        transform: rotate(0deg) skewX(0deg);
-      }
-      40% {
-        transform: rotate(2deg) skewX(1deg);
-      }
-      80% {
-        transform: rotate(-1.5deg) skewX(-1deg);
-      }
-    }
-
-    /* Tree Placements */
-    .tree-left {
-      left: -20px;
-      width: 240px;
-      height: 380px;
-      animation: windSwayLeft 5.5s ease-in-out infinite;
-      z-index: 7;
-    }
-
-    .tree-right {
-      right: -30px;
-      width: 260px;
-      height: 410px;
-      animation: windSwayRight 6.5s ease-in-out infinite;
-      z-index: 7;
-    }
-
-    .tree-back-left {
-      left: 18%;
-      bottom: 44px;
-      width: 150px;
-      height: 250px;
-      opacity: 0.65;
-      animation: windSwayBack 7s ease-in-out infinite 0.5s;
-      z-index: 3;
-      filter: brightness(0.7) saturate(0.85);
-    }
-
-    .tree-back-right {
-      right: 17%;
-      bottom: 44px;
-      width: 170px;
-      height: 270px;
-      opacity: 0.65;
-      animation: windSwayBack 8s ease-in-out infinite 1.2s;
-      z-index: 3;
-      filter: brightness(0.7) saturate(0.85);
-    }
-
-    /* Jeppy the Pixel Owl in the Tree */
-    .jeppy-owl {
-      position: absolute;
-      top: 150px;
-      right: 55px;
-      width: 24px;
-      height: 24px;
-      z-index: 8;
-    }
-
-    .jeppy-eyes {
-      animation: blink 4s infinite;
-    }
-
-    @keyframes blink {
-      0%, 94%, 98%, 100% { transform: scaleY(1); }
-      96% { transform: scaleY(0.1); }
-    }
-
-    /* ==========================================================
-       FALLING PIXEL LEAVES
-       ========================================================== */
+    /* Falling Autumn Leaves */
     .leaf {
       position: fixed;
-      width: 10px;
-      height: 10px;
+      width: 20px;
+      height: 20px;
       pointer-events: none;
       z-index: 9;
-      animation-name: fallAndDrift;
-      animation-timing-function: linear;
-      animation-iteration-count: infinite;
+      animation: fallAndDrift linear infinite;
+    }
+    @keyframes fallAndDrift {
+      0% { transform: translate(0, -20px) rotate(0deg); opacity: 0; }
+      10% { opacity: 1; }
+      100% { transform: translate(140px, 105vh) rotate(360deg); opacity: 0; }
+    }
+    .leaf-1 { left: 5%; animation-duration: 9s; }
+    .leaf-2 { left: 25%; animation-duration: 7s; animation-delay: 2s; }
+    .leaf-3 { left: 55%; animation-duration: 10s; animation-delay: 1s; }
+    .leaf-4 { left: 80%; animation-duration: 8s; animation-delay: 3s; }
+
+    /* ==========================================================
+       JAPANESE ZEN GARDEN LAYER (BREAK MODE)
+       ========================================================== */
+    .zen-garden-layer {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 5;
     }
 
-    @keyframes fallAndDrift {
+    /* 1. Raked White Sand Ground */
+    .zen-ground {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 64px;
+      background: var(--zen-sand);
+      border-top: 6px solid #b3a992;
+      box-shadow: inset 0 -18px 0 0 var(--zen-sand-shade);
+      z-index: 6;
+    }
+
+    .zen-ripples {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: repeating-linear-gradient(
+        0deg,
+        transparent 0px,
+        transparent 7px,
+        rgba(150, 137, 114, 0.45) 7px,
+        rgba(150, 137, 114, 0.45) 9px
+      );
+    }
+
+    /* 2. Majestic Mt. Fuji (Background Right) */
+    .zen-fuji {
+      position: absolute;
+      bottom: 60px;
+      right: 2%;
+      width: 480px;
+      height: 330px;
+      z-index: 6;
+      filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.25));
+    }
+
+    /* 3. Grand Thatched Tea Pavilion (Left - Planted on Ground) */
+    .zen-pavilion {
+      position: absolute;
+      bottom: 58px; /* Firmly touches the sand ground */
+      left: 1.5%;
+      width: 320px;
+      height: 340px;
+      z-index: 7;
+      filter: drop-shadow(4px 4px 0px rgba(0, 0, 0, 0.35));
+    }
+
+    /* 4. Zen Master Jeppy on the Deck */
+    .zen-jeppy {
+      position: absolute;
+      bottom: 84px; /* Perfectly aligned to the porch floor */
+      left: 135px;
+      width: 58px;
+      height: 58px;
+      z-index: 8;
+      animation: teaSip 3.5s steps(2) infinite;
+    }
+
+    @keyframes teaSip {
+      0%, 80%, 100% { transform: translateY(0); }
+      85%, 95% { transform: translateY(-3px); }
+    }
+
+    .tea-steam {
+      animation: steamFloat 1.8s infinite;
+      transform-origin: center;
+    }
+    @keyframes steamFloat {
+      0% { opacity: 0; transform: translateY(0) scale(0.8); }
+      50% { opacity: 1; transform: translateY(-6px) scale(1.1); }
+      100% { opacity: 0; transform: translateY(-14px) scale(0.7); }
+    }
+
+    /* 5. Grandiose Vermilion Red Bridge (Center-Left) */
+    .zen-bridge {
+      position: absolute;
+      bottom: 58px; /* Sits directly on the ground */
+      left: 27%;
+      width: 420px;
+      height: 185px;
+      z-index: 7;
+      filter: drop-shadow(0 8px 0px rgba(0, 0, 0, 0.35));
+    }
+
+    /* Drifting Pink Sakura Blossom Petals */
+    .sakura-petal {
+      display: none;
+      position: fixed;
+      width: 14px;
+      height: 14px;
+      pointer-events: none;
+      z-index: 10;
+      animation: sakuraDrift linear infinite;
+    }
+    @keyframes sakuraDrift {
       0% {
         transform: translate(0, -20px) rotate(0deg);
         opacity: 0;
       }
-      10% {
-        opacity: 1;
-      }
-      50% {
-        transform: translate(80px, 50vh) rotate(180deg);
-      }
-      90% {
-        opacity: 1;
-      }
+      15% { opacity: 1; }
+      50% { transform: translate(90px, 45vh) rotate(180deg); }
+      90% { opacity: 1; }
       100% {
         transform: translate(160px, 105vh) rotate(360deg);
         opacity: 0;
       }
     }
+    .sakura-1 { left: 10%; animation-duration: 8s; }
+    .sakura-2 { left: 32%; animation-duration: 6.5s; animation-delay: 1.5s; }
+    .sakura-3 { left: 60%; animation-duration: 9.5s; animation-delay: 0.5s; }
+    .sakura-4 { left: 82%; animation-duration: 7s; animation-delay: 2.5s; }
 
-    /* Leaf variations */
-    .leaf-1 { left: 5%;  animation-duration: 9s; animation-delay: 0s; }
-    .leaf-2 { left: 22%; animation-duration: 7s; animation-delay: 2s; }
-    .leaf-3 { left: 45%; animation-duration: 11s; animation-delay: 1s; }
-    .leaf-4 { left: 68%; animation-duration: 8.5s; animation-delay: 3.5s; }
-    .leaf-5 { left: 88%; animation-duration: 6.5s; animation-delay: 0.5s; }
-    .leaf-6 { left: 35%; animation-duration: 10s; animation-delay: 5s; }
-
-    /* Responsive adjustments */
-    @media (max-width: 820px) {
-      .tree-left { width: 160px; height: 260px; left: -30px; }
-      .tree-right { width: 170px; height: 280px; right: -30px; }
-      .tree-back-left, .tree-back-right { display: none; }
-      #timer { font-size: 28px; }
-      h1.main-title { font-size: 11px; }
+    /* Responsive */
+    @media (max-width: 1200px) {
+      .zen-pavilion { width: 250px; height: 270px; left: -10px; }
+      .zen-jeppy { left: 95px; bottom: 78px; width: 48px; height: 48px; }
+      .zen-bridge { width: 330px; height: 145px; left: 24%; }
+      .zen-fuji { width: 360px; height: 250px; right: -20px; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Falling Pixel Leaves -->
-  <svg class="leaf leaf-1" viewBox="0 0 4 4" shape-rendering="crispEdges">
+  <!-- ==========================================================
+       FALLING AUTUMN LEAVES (STUDY MODE)
+       ========================================================== -->
+  <svg class="leaf autumn-leaf leaf-1" viewBox="0 0 4 4" shape-rendering="crispEdges">
     <rect x="1" y="0" width="2" height="1" fill="#f4b41b" />
     <rect x="0" y="1" width="4" height="2" fill="#e66b27" />
     <rect x="1" y="3" width="2" height="1" fill="#a3281b" />
   </svg>
-  <svg class="leaf leaf-2" viewBox="0 0 4 4" shape-rendering="crispEdges">
+  <svg class="leaf autumn-leaf leaf-2" viewBox="0 0 4 4" shape-rendering="crispEdges">
     <rect x="1" y="0" width="2" height="1" fill="#a3281b" />
     <rect x="0" y="1" width="4" height="2" fill="#c4431e" />
     <rect x="1" y="3" width="2" height="1" fill="#801c13" />
   </svg>
-  <svg class="leaf leaf-3" viewBox="0 0 4 4" shape-rendering="crispEdges">
+  <svg class="leaf autumn-leaf leaf-3" viewBox="0 0 4 4" shape-rendering="crispEdges">
     <rect x="1" y="0" width="2" height="1" fill="#ffd043" />
     <rect x="0" y="1" width="4" height="2" fill="#f4b41b" />
     <rect x="1" y="3" width="2" height="1" fill="#bd7613" />
   </svg>
-  <svg class="leaf leaf-4" viewBox="0 0 4 4" shape-rendering="crispEdges">
+  <svg class="leaf autumn-leaf leaf-4" viewBox="0 0 4 4" shape-rendering="crispEdges">
     <rect x="1" y="0" width="2" height="1" fill="#e66b27" />
     <rect x="0" y="1" width="4" height="2" fill="#d0501a" />
     <rect x="1" y="3" width="2" height="1" fill="#872910" />
   </svg>
-  <svg class="leaf leaf-5" viewBox="0 0 4 4" shape-rendering="crispEdges">
-    <rect x="1" y="0" width="2" height="1" fill="#ffd043" />
-    <rect x="0" y="1" width="4" height="2" fill="#e66b27" />
-    <rect x="1" y="3" width="2" height="1" fill="#872910" />
+
+  <!-- ==========================================================
+       DRIFTING PINK SAKURA PETALS (ZEN BREAK MODE)
+       ========================================================== -->
+  <svg class="sakura-petal sakura-1" viewBox="0 0 6 6" shape-rendering="crispEdges">
+    <rect x="2" y="0" width="2" height="1" fill="#ff7597" />
+    <rect x="1" y="1" width="4" height="3" fill="#ffaec9" />
+    <rect x="2" y="4" width="2" height="1" fill="#ff7597" />
+    <rect x="2" y="2" width="2" height="1" fill="#ffffff" />
   </svg>
-  <svg class="leaf leaf-6" viewBox="0 0 4 4" shape-rendering="crispEdges">
-    <rect x="1" y="0" width="2" height="1" fill="#a3281b" />
-    <rect x="0" y="1" width="4" height="2" fill="#e66b27" />
-    <rect x="1" y="3" width="2" height="1" fill="#6d1910" />
+  <svg class="sakura-petal sakura-2" viewBox="0 0 6 6" shape-rendering="crispEdges">
+    <rect x="1" y="1" width="4" height="4" fill="#ff4b93" />
+    <rect x="2" y="2" width="2" height="2" fill="#ffaec9" />
+  </svg>
+  <svg class="sakura-petal sakura-3" viewBox="0 0 6 6" shape-rendering="crispEdges">
+    <rect x="2" y="0" width="2" height="1" fill="#ff7597" />
+    <rect x="0" y="1" width="6" height="3" fill="#ffaec9" />
+    <rect x="1" y="4" width="4" height="1" fill="#d6226b" />
+  </svg>
+  <svg class="sakura-petal sakura-4" viewBox="0 0 6 6" shape-rendering="crispEdges">
+    <rect x="2" y="1" width="2" height="4" fill="#ffaec9" />
+    <rect x="1" y="2" width="4" height="2" fill="#ff7597" />
   </svg>
 
-  <!-- Foreground Interface -->
+  <!-- ==========================================================
+       FOREGROUND INTERFACE (HUD)
+       ========================================================== -->
   <div class="content-wrapper">
     <div class="title-badge">
-      <h1 class="main-title">Jepi's Always Watching....</h1>
+      <h1 class="main-title" id="pageTitle">Jepi's Always Watching....</h1>
     </div>
 
     <!-- Search Form -->
@@ -607,7 +644,7 @@
 
     <!-- Retro Focus HUD -->
     <div class="timer-container">
-      <h2>Focus Timer</h2>
+      <h2 id="hudStatus">Focus Timer</h2>
       <h1 id="timer">25:00</h1>
       <p id="leaves">
         <svg width="14" height="14" viewBox="0 0 8 8" shape-rendering="crispEdges">
@@ -619,185 +656,366 @@
         </svg>
         Leaves collected: 0
       </p>
+      <br>
+      <button id="endBreakBtn">Lock Back In</button>
     </div>
   </div>
 
-  <!-- Swaying Trees and Ground Scenery -->
   <!-- ==========================================================
-       SWAYING TREES, GROUND, MASCOT & LEAF PILE
-       (Place right after </div class="content-wrapper">)
+       AUTUMN HAVEN LAYER (ACTIVE DURING FOCUS SESSION)
        ========================================================== -->
-       <div class="forest-layer">
+  <div class="forest-layer">
+    <!-- Background Trees -->
+    <svg class="tree tree-back-left" viewBox="0 0 32 48" shape-rendering="crispEdges">
+      <rect x="14" y="24" width="4" height="24" fill="#2b150c" />
+      <rect x="8" y="14" width="16" height="18" fill="#d4791e" />
+      <rect x="10" y="8" width="12" height="18" fill="#f0a528" />
+      <rect x="12" y="4" width="8" height="12" fill="#fed65b" />
+    </svg>
+    <svg class="tree tree-back-right" viewBox="0 0 32 48" shape-rendering="crispEdges">
+      <rect x="14" y="24" width="4" height="24" fill="#2b150c" />
+      <rect x="8" y="12" width="16" height="18" fill="#9e3019" />
+      <rect x="10" y="6" width="12" height="16" fill="#c7491d" />
+      <rect x="12" y="3" width="8" height="12" fill="#f47827" />
+    </svg>
 
-        <!-- Background Tree 1 (Golden) -->
-        <svg class="tree tree-back-left" viewBox="0 0 32 48" shape-rendering="crispEdges">
-          <rect x="14" y="24" width="4" height="24" fill="#2b150c" />
-          <rect x="8" y="14" width="16" height="18" fill="#d4791e" />
-          <rect x="10" y="8" width="12" height="18" fill="#f0a528" />
-          <rect x="12" y="4" width="8" height="12" fill="#fed65b" />
-        </svg>
-    
-        <!-- Background Tree 2 (Rust) -->
-        <svg class="tree tree-back-right" viewBox="0 0 32 48" shape-rendering="crispEdges">
-          <rect x="14" y="24" width="4" height="24" fill="#2b150c" />
-          <rect x="8" y="12" width="16" height="18" fill="#9e3019" />
-          <rect x="10" y="6" width="12" height="16" fill="#c7491d" />
-          <rect x="12" y="3" width="8" height="12" fill="#f47827" />
-        </svg>
-    
-        <!-- Foreground Left Tree (Grand Crimson & Orange Tree) -->
-        <svg class="tree tree-left" viewBox="0 0 48 64" shape-rendering="crispEdges">
-          <rect x="20" y="36" width="8" height="28" fill="#2d130a" />
-          <rect x="18" y="46" width="3" height="18" fill="#462012" />
-          <rect x="22" y="38" width="4" height="26" fill="#462012" />
-          <rect x="14" y="58" width="6" height="6" fill="#2d130a" />
-          <rect x="28" y="56" width="6" height="8" fill="#2d130a" />
-          <rect x="8" y="20" width="32" height="20" fill="#681912" />
-          <rect x="12" y="14" width="24" height="28" fill="#681912" />
-          <rect x="6" y="18" width="34" height="16" fill="#a42817" />
-          <rect x="10" y="10" width="28" height="22" fill="#c6471e" />
-          <rect x="14" y="6" width="20" height="24" fill="#e66b27" />
-          <rect x="14" y="6" width="16" height="10" fill="#f49d23" />
-          <rect x="18" y="3" width="10" height="8" fill="#fed65b" />
-          <rect x="8" y="22" width="6" height="6" fill="#e66b27" />
-          <rect x="30" y="20" width="6" height="8" fill="#f49d23" />
-        </svg>
-    
-        <!-- Foreground Right Tree with Jeppy the Owl -->
-        <div class="tree tree-right">
-          <svg viewBox="0 0 48 64" width="100%" height="100%" shape-rendering="crispEdges">
-            <rect x="20" y="34" width="8" height="30" fill="#271108" />
-            <rect x="22" y="34" width="4" height="30" fill="#442113" />
-            <rect x="14" y="56" width="7" height="8" fill="#271108" />
-            <rect x="27" y="58" width="6" height="6" fill="#271108" />
-            <rect x="10" y="38" width="12" height="4" fill="#271108" />
-            <rect x="12" y="36" width="8" height="2" fill="#442113" />
-            <rect x="6" y="16" width="36" height="22" fill="#7a2a11" />
-            <rect x="10" y="10" width="28" height="26" fill="#af4014" />
-            <rect x="8" y="14" width="30" height="18" fill="#dd611d" />
-            <rect x="14" y="6" width="22" height="22" fill="#f49923" />
-            <rect x="18" y="2" width="14" height="14" fill="#ffd043" />
-            <rect x="4" y="22" width="8" height="8" fill="#af4014" />
-            <rect x="32" y="18" width="10" height="10" fill="#f49923" />
-          </svg>
-    
-          <!-- Owl perched on branch -->
-          <svg class="jeppy-owl" viewBox="0 0 10 10" shape-rendering="crispEdges">
-            <rect x="2" y="2" width="6" height="7" fill="#54301a" />
-            <rect x="2" y="0" width="2" height="2" fill="#381e0f" />
-            <rect x="6" y="0" width="2" height="2" fill="#381e0f" />
-            <rect x="3" y="5" width="4" height="4" fill="#deb887" />
-            <g class="jeppy-eyes" style="transform-origin: 5px 3px;">
-              <rect x="2" y="2" width="3" height="3" fill="#fff" />
-              <rect x="5" y="2" width="3" height="3" fill="#fff" />
-              <rect x="3" y="3" width="1" height="2" fill="#e69c24" />
-              <rect x="6" y="3" width="1" height="2" fill="#e69c24" />
-              <rect x="4" y="3" width="2" height="2" fill="#f25f1c" />
-            </g>
-          </svg>
-        </div>
-    
-        <!-- 1. DROPPED GROUND LEAF (Appears when timer awards a leaf) -->
-        <svg id="groundLeaf" class="ground-pickup-leaf" viewBox="0 0 12 12" shape-rendering="crispEdges">
-          <rect x="5" y="0" width="2" height="1" fill="#fed65b" />
-          <rect x="4" y="1" width="4" height="2" fill="#ffd043" />
-          <rect x="3" y="3" width="6" height="3" fill="#f49d23" />
-          <rect x="2" y="6" width="8" height="3" fill="#e66b27" />
-          <rect x="3" y="9" width="6" height="2" fill="#a3281b" />
-          <rect x="5" y="11" width="2" height="1" fill="#442113" />
-          <rect x="5" y="4" width="2" height="4" fill="#fed65b" />
-        </svg>
-    
-        <!-- 2. WALKING MASCOT (With Big Held Leaf) -->
-        <div class="ground-mascot" id="groundMascot">
-          <svg class="held-leaf" viewBox="0 0 12 12" shape-rendering="crispEdges">
-            <rect x="5" y="0" width="2" height="1" fill="#fed65b" />
-            <rect x="4" y="1" width="4" height="2" fill="#ffd043" />
-            <rect x="3" y="3" width="6" height="3" fill="#f49d23" />
-            <rect x="2" y="6" width="8" height="3" fill="#e66b27" />
-            <rect x="3" y="9" width="6" height="2" fill="#a3281b" />
-            <rect x="5" y="11" width="2" height="1" fill="#442113" />
-            <rect x="5" y="4" width="2" height="4" fill="#fed65b" />
-          </svg>
-          <img src="assets/mascot.svg" alt="Jeppy">
-        </div>
-    
-        <!-- 3. LARGE LEAF PILE (Always visible on ground) -->
-        <div class="leaf-pile stage-0" id="leafPile">
-          <svg viewBox="0 0 48 30" width="100%" height="100%" shape-rendering="crispEdges">
-            <!-- BASE: ALWAYS VISIBLE -->
-            <g class="lvl-base">
-              <rect x="2" y="27" width="44" height="3" fill="#200f09" />
-              <rect x="6" y="25" width="14" height="3" fill="#6d1910" />
-              <rect x="22" y="25" width="18" height="3" fill="#872910" />
-              <rect x="10" y="23" width="12" height="3" fill="#a3281b" />
-              <rect x="26" y="24" width="10" height="2" fill="#a42817" />
-              <rect x="38" y="20" width="2" height="8" fill="#442416" />
-              <rect x="35" y="16" width="8" height="5" fill="#f4b41b" />
-              <rect x="36" y="17" width="6" height="3" fill="#6d3a24" />
-            </g>
-            <!-- STAGE 1 -->
-            <g class="lvl lvl-1">
-              <rect x="4" y="22" width="16" height="4" fill="#a3281b" />
-              <rect x="18" y="21" width="18" height="4" fill="#cf4a17" />
-              <rect x="8" y="19" width="12" height="3" fill="#e66b27" />
-              <rect x="24" y="20" width="10" height="3" fill="#f49d23" />
-            </g>
-            <!-- STAGE 2 -->
-            <g class="lvl lvl-2">
-              <rect x="10" y="16" width="24" height="5" fill="#cf4a17" />
-              <rect x="14" y="14" width="18" height="4" fill="#e66b27" />
-              <rect x="16" y="12" width="12" height="3" fill="#f49d23" />
-              <rect x="6" y="18" width="8" height="3" fill="#a3281b" />
-              <rect x="30" y="18" width="8" height="3" fill="#e66b27" />
-            </g>
-            <!-- STAGE 3 -->
-            <g class="lvl lvl-3">
-              <rect x="12" y="10" width="22" height="5" fill="#e66b27" />
-              <rect x="14" y="8" width="18" height="4" fill="#f4b41b" />
-              <rect x="18" y="6" width="10" height="3" fill="#fed65b" />
-              <rect x="28" y="9" width="6" height="3" fill="#a3281b" />
-              <rect x="8" y="13" width="6" height="3" fill="#ffd043" />
-            </g>
-            <!-- STAGE 4 -->
-            <g class="lvl lvl-4">
-              <rect x="8" y="8" width="28" height="5" fill="#f49d23" />
-              <rect x="14" y="4" width="18" height="5" fill="#fed65b" />
-              <rect x="18" y="2" width="10" height="3" fill="#ffd043" />
-              <rect x="4" y="14" width="6" height="4" fill="#cf4a17" />
-              <rect x="34" y="13" width="8" height="4" fill="#f4b41b" />
-            </g>
-            <!-- STAGE 5 -->
-            <g class="lvl lvl-5">
-              <rect x="16" y="0" width="12" height="3" fill="#fed65b" />
-              <rect x="20" y="-2" width="4" height="2" fill="#ffd043" />
-              <rect x="0" y="24" width="6" height="3" fill="#e66b27" />
-              <rect x="42" y="24" width="6" height="3" fill="#f4b41b" />
-              <rect x="2" y="20" width="4" height="3" fill="#fed65b" />
-              <rect x="12" y="3" width="4" height="2" fill="#ffffff" />
-              <rect x="26" y="4" width="4" height="2" fill="#ffffff" />
-            </g>
-          </svg>
-        </div>
-    
-        <!-- Ground Floor Dirt Layer -->
-        <div class="pixel-ground">
-          <div class="pixel-grass-clumps"></div>
-        </div>
-      </div>
-      <!-- ==========================================================
-           END OF FOREST LAYER (Put <script> tags right below this)
-           ========================================================== -->
+    <!-- Foreground Left Crimson Tree -->
+    <svg class="tree tree-left" viewBox="0 0 48 64" shape-rendering="crispEdges">
+      <rect x="20" y="36" width="8" height="28" fill="#2d130a" />
+      <rect x="18" y="46" width="3" height="18" fill="#462012" />
+      <rect x="8" y="20" width="32" height="20" fill="#681912" />
+      <rect x="6" y="18" width="34" height="16" fill="#a42817" />
+      <rect x="10" y="10" width="28" height="22" fill="#c6471e" />
+      <rect x="14" y="6" width="20" height="24" fill="#e66b27" />
+      <rect x="18" y="3" width="10" height="8" fill="#fed65b" />
+    </svg>
 
-    <!-- Ground Floor -->
+    <!-- Foreground Right Tree with Owl -->
+    <div class="tree tree-right">
+      <svg viewBox="0 0 48 64" width="100%" height="100%" shape-rendering="crispEdges">
+        <rect x="20" y="34" width="8" height="30" fill="#271108" />
+        <rect x="22" y="34" width="4" height="30" fill="#442113" />
+        <rect x="10" y="38" width="12" height="4" fill="#271108" />
+        <rect x="6" y="16" width="36" height="22" fill="#7a2a11" />
+        <rect x="10" y="10" width="28" height="26" fill="#af4014" />
+        <rect x="8" y="14" width="30" height="18" fill="#dd611d" />
+        <rect x="14" y="6" width="22" height="22" fill="#f49923" />
+        <rect x="18" y="2" width="14" height="14" fill="#ffd043" />
+      </svg>
+      <svg class="jeppy-owl" viewBox="0 0 10 10" shape-rendering="crispEdges">
+        <rect x="2" y="2" width="6" height="7" fill="#54301a" />
+        <rect x="2" y="0" width="2" height="2" fill="#381e0f" />
+        <rect x="6" y="0" width="2" height="2" fill="#381e0f" />
+        <rect x="3" y="5" width="4" height="4" fill="#deb887" />
+        <g class="jeppy-eyes">
+          <rect x="2" y="2" width="3" height="3" fill="#fff" />
+          <rect x="5" y="2" width="3" height="3" fill="#fff" />
+          <rect x="3" y="3" width="1" height="2" fill="#e69c24" />
+          <rect x="6" y="3" width="1" height="2" fill="#e69c24" />
+        </g>
+      </svg>
+    </div>
+
+    <!-- Dropped Leaf -->
+    <svg id="groundLeaf" class="ground-pickup-leaf" viewBox="0 0 12 12" shape-rendering="crispEdges">
+      <rect x="5" y="0" width="2" height="1" fill="#fed65b" />
+      <rect x="4" y="1" width="4" height="2" fill="#ffd043" />
+      <rect x="3" y="3" width="6" height="3" fill="#f49d23" />
+      <rect x="2" y="6" width="8" height="3" fill="#e66b27" />
+      <rect x="3" y="9" width="6" height="2" fill="#a3281b" />
+      <rect x="5" y="11" width="2" height="1" fill="#442113" />
+    </svg>
+
+    <!-- Walking Mascot -->
+    <div class="ground-mascot" id="groundMascot">
+      <svg class="held-leaf" viewBox="0 0 12 12" shape-rendering="crispEdges">
+        <rect x="5" y="0" width="2" height="1" fill="#fed65b" />
+        <rect x="4" y="1" width="4" height="2" fill="#ffd043" />
+        <rect x="3" y="3" width="6" height="3" fill="#f49d23" />
+        <rect x="2" y="6" width="8" height="3" fill="#e66b27" />
+        <rect x="3" y="9" width="6" height="2" fill="#a3281b" />
+      </svg>
+      <img src="assets/mascot.svg" alt="Jeppy">
+    </div>
+
+    <!-- Leaf Pile -->
+    <div class="leaf-pile stage-0" id="leafPile">
+      <svg viewBox="0 0 48 30" width="100%" height="100%" shape-rendering="crispEdges">
+        <g class="lvl-base">
+          <rect x="2" y="27" width="44" height="3" fill="#200f09" />
+          <rect x="6" y="25" width="14" height="3" fill="#6d1910" />
+          <rect x="22" y="25" width="18" height="3" fill="#872910" />
+          <rect x="38" y="20" width="2" height="8" fill="#442416" />
+          <rect x="35" y="16" width="8" height="5" fill="#f4b41b" />
+        </g>
+        <g class="lvl lvl-1">
+          <rect x="4" y="22" width="16" height="4" fill="#a3281b" />
+          <rect x="18" y="21" width="18" height="4" fill="#cf4a17" />
+        </g>
+        <g class="lvl lvl-2">
+          <rect x="10" y="16" width="24" height="5" fill="#cf4a17" />
+          <rect x="14" y="14" width="18" height="4" fill="#e66b27" />
+        </g>
+        <g class="lvl lvl-3">
+          <rect x="12" y="10" width="22" height="5" fill="#e66b27" />
+          <rect x="14" y="8" width="18" height="4" fill="#f4b41b" />
+          <rect x="18" y="6" width="10" height="3" fill="#fed65b" />
+        </g>
+        <g class="lvl lvl-4">
+          <rect x="8" y="8" width="28" height="5" fill="#f49d23" />
+          <rect x="14" y="4" width="18" height="5" fill="#fed65b" />
+          <rect x="18" y="2" width="10" height="3" fill="#ffd043" />
+        </g>
+        <g class="lvl lvl-5">
+          <rect x="16" y="0" width="12" height="3" fill="#fed65b" />
+          <rect x="0" y="24" width="6" height="3" fill="#e66b27" />
+          <rect x="42" y="24" width="6" height="3" fill="#f4b41b" />
+        </g>
+      </svg>
+    </div>
+
+    <!-- Dirt Ground -->
     <div class="pixel-ground">
       <div class="pixel-grass-clumps"></div>
     </div>
   </div>
 
+  <!-- ==========================================================
+       ZEN GARDEN SANCTUARY LAYER (BREAK TIME MODE)
+       ========================================================== -->
+  <div class="zen-garden-layer">
+
+    <!-- 1. MAJESTIC MT. FUJI (Background Right) -->
+    <svg class="zen-fuji" viewBox="0 0 120 80" shape-rendering="crispEdges">
+      <!-- Soft Morning Fog Silhouette Behind Peak -->
+      <polygon points="60,6 20,78 100,78" fill="#5b786c" opacity="0.3" />
+
+      <!-- Mountain Main Body (Indigo / Slate Twilight) -->
+      <polygon points="60,8 14,78 106,78" fill="#1e2c3d" />
+      <polygon points="60,8 60,78 106,78" fill="#162230" /> <!-- Right Shadow Side -->
+
+      <!-- Mid-mountain Ridge Details -->
+      <polygon points="60,26 50,78 70,78" fill="#25374d" />
+      <polygon points="60,34 56,78 64,78" fill="#1b2838" />
+
+      <!-- Iconic Snow-Capped Crown -->
+      <polygon points="60,8 44,28 76,28" fill="#eef6ff" />
+      <polygon points="60,8 60,28 76,28" fill="#d2e3f5" /> <!-- Snow Shadow -->
+
+      <!-- Jagged Snow Drifts / Glaciers Cascading Down -->
+      <!-- Left Snow Ribs -->
+      <polygon points="46,26 42,42 47,40" fill="#eef6ff" />
+      <polygon points="50,27 48,46 52,43" fill="#eef6ff" />
+      <polygon points="54,28 53,50 56,48" fill="#eef6ff" />
+      <!-- Center Snow Ridge -->
+      <polygon points="59,28 58,54 61,54" fill="#ffffff" />
+      <!-- Right Snow Ribs (In Shadow) -->
+      <polygon points="63,28 65,48 62,46" fill="#c3d8ee" />
+      <polygon points="68,27 72,44 69,42" fill="#c3d8ee" />
+      <polygon points="73,26 77,38 74,36" fill="#b1cbdf" />
+
+      <!-- Flat Volcanic Crater Rim Highlight -->
+      <rect x="56" y="8" width="8" height="2" fill="#ffffff" />
+
+      <!-- Low Floating Mist Bands at Base -->
+      <rect x="6" y="70" width="46" height="2" fill="#cbe3d3" opacity="0.5" />
+      <rect x="24" y="66" width="34" height="2" fill="#cbe3d3" opacity="0.6" />
+      <rect x="74" y="68" width="42" height="2" fill="#cbe3d3" opacity="0.5" />
+      <rect x="62" y="72" width="36" height="2" fill="#cbe3d3" opacity="0.7" />
+    </svg>
+
+    <!-- 2. GRAND THATCHED TEA HUT (Left - Firmly Planted on Ground) -->
+    <svg class="zen-pavilion" viewBox="0 0 90 90" shape-rendering="crispEdges">
+      <!-- Thatched Roof Timber Ridgepole & Ornamentation -->
+      <rect x="42" y="4" width="6" height="4" fill="#24140b" />
+      <rect x="36" y="6" width="18" height="2" fill="#3d2416" />
+
+      <!-- Grand Straw Thatched Eaves (Layered Angles) -->
+      <polygon points="45,6 12,32 78,32" fill="#3d2416" />
+      <polygon points="45,9 16,31 74,31" fill="#5a3821" />
+      <polygon points="45,12 20,30 70,30" fill="#7a4f30" />
+      <polygon points="45,15 24,29 66,29" fill="#94623d" />
+
+      <!-- Curved Straw Overhang Trim -->
+      <rect x="10" y="32" width="70" height="4" fill="#24140b" />
+      <rect x="8" y="34" width="74" height="2" fill="#442614" />
+      <rect x="6" y="35" width="4" height="3" fill="#24140b" />
+      <rect x="80" y="35" width="4" height="3" fill="#24140b" />
+
+      <!-- Under-roof Support Beams -->
+      <rect x="18" y="36" width="54" height="3" fill="#3d2416" />
+
+      <!-- Heavy Wooden Pillars (Going straight down into the sand floor) -->
+      <rect x="18" y="39" width="5" height="49" fill="#24140b" />
+      <rect x="20" y="39" width="2" height="49" fill="#442614" /> <!-- Highlight -->
+      
+      <rect x="42" y="39" width="4" height="49" fill="#24140b" />
+      
+      <rect x="67" y="39" width="5" height="49" fill="#24140b" />
+      <rect x="68" y="39" width="2" height="49" fill="#442614" />
+
+      <!-- Traditional Shoji Screen Back Wall -->
+      <rect x="23" y="39" width="44" height="28" fill="#f5ede1" />
+      <!-- Shoji Wooden Grid Lattice -->
+      <rect x="23" y="45" width="44" height="1" fill="#3d2416" />
+      <rect x="23" y="52" width="44" height="1" fill="#3d2416" />
+      <rect x="23" y="59" width="44" height="1" fill="#3d2416" />
+      <rect x="32" y="39" width="1" height="28" fill="#3d2416" />
+      <rect x="42" y="39" width="1" height="28" fill="#3d2416" />
+      <rect x="52" y="39" width="1" height="28" fill="#3d2416" />
+      <rect x="60" y="39" width="1" height="28" fill="#3d2416" />
+
+      <!-- Engawa (Raised Wooden Porch Deck) -->
+      <rect x="12" y="67" width="66" height="9" fill="#5a3821" />
+      <rect x="10" y="69" width="70" height="3" fill="#3d2416" />
+      <rect x="14" y="67" width="62" height="2" fill="#7a4f30" /> <!-- Deck Highlight -->
+
+      <!-- Stone Foundation Pillars (Planting hut solidly into the earth) -->
+      <rect x="16" y="76" width="9" height="12" fill="#424741" />
+      <rect x="40" y="76" width="8" height="12" fill="#363a35" />
+      <rect x="65" y="76" width="9" height="12" fill="#424741" />
+
+      <!-- Hanging Paper Lantern under Eave -->
+      <rect x="24" y="36" width="1" height="4" fill="#111" />
+      <rect x="22" y="40" width="5" height="6" fill="#fcf6cf" />
+      <rect x="23" y="41" width="3" height="4" fill="#ff7a36" />
+      <rect x="22" y="39" width="5" height="1" fill="#24140b" />
+      <rect x="22" y="46" width="5" height="1" fill="#24140b" />
+    </svg>
+
+    <!-- 3. ZEN MASTER JEPPY (Sitting & Sipping Tea on the Porch) -->
+    <div class="zen-jeppy">
+      <svg viewBox="0 0 32 32" width="100%" height="100%" shape-rendering="crispEdges">
+        <!-- Sticky Tabs on Left -->
+        <rect x="2" y="8" width="3" height="3" fill="#0d1b6e" />
+        <rect x="2" y="12" width="3" height="3" fill="#e66378" />
+        <rect x="2" y="16" width="3" height="3" fill="#d92a3f" />
+
+        <!-- Head Outline -->
+        <rect x="5" y="5" width="20" height="17" fill="#140d0b" />
+        <!-- Face: Teal Left, Cyan Right -->
+        <rect x="6" y="6" width="9" height="15" fill="#1b9a7a" />
+        <rect x="15" y="6" width="9" height="15" fill="#88d8e6" />
+        <!-- Finder Nose -->
+        <rect x="14" y="13" width="2" height="3" fill="#126e57" />
+        <!-- Mint Stamp Top Right -->
+        <rect x="19" y="7" width="4" height="3" fill="#30bf8d" />
+
+        <!-- Peaceful Closed Happy Eyes (^ ^) -->
+        <path d="M 8,13 Q 10,11 12,13" stroke="#111" stroke-width="2" fill="none" />
+        <path d="M 17,13 Q 19,11 21,13" stroke="#111" stroke-width="2" fill="none" />
+
+        <!-- Rosy Blush -->
+        <rect x="7" y="15" width="3" height="1" fill="#ff708f" />
+        <rect x="20" y="15" width="3" height="1" fill="#ff708f" />
+
+        <!-- Collar -->
+        <rect x="6" y="21" width="18" height="2" fill="#140d0b" />
+
+        <!-- Cross-legged Sitting Base -->
+        <rect x="4" y="23" width="22" height="5" fill="#140d0b" />
+        <rect x="6" y="24" width="18" height="3" fill="#3b2615" />
+
+        <!-- Green Matcha Bowl Held in Hands -->
+        <rect x="12" y="19" width="6" height="4" fill="#140d0b" />
+        <rect x="13" y="19" width="4" height="3" fill="#436b36" />
+        <rect x="14" y="18" width="2" height="1" fill="#75a863" />
+
+        <!-- Steaming Tea Effect -->
+        <g class="tea-steam">
+          <rect x="14" y="14" width="1" height="2" fill="#ffffff" opacity="0.8" />
+          <rect x="16" y="13" width="1" height="2" fill="#ffffff" opacity="0.8" />
+        </g>
+      </svg>
+    </div>
+
+    <!-- 4. GRANDIOSE VERMILION RED BRIDGE (Taiko-bashi) -->
+    <svg class="zen-bridge" viewBox="0 0 100 45" shape-rendering="crispEdges">
+      <!-- River Stone Foundations at the Abutments -->
+      <polygon points="2,44 14,35 18,44" fill="#3f453e" />
+      <polygon points="82,44 86,35 98,44" fill="#3f453e" />
+      <rect x="4" y="41" width="8" height="3" fill="#586157" />
+      <rect x="88" y="41" width="8" height="3" fill="#586157" />
+
+      <!-- Under-Bridge Heavy Wooden Arched Trestles -->
+      <path d="M 6,36 Q 50,6 94,36" stroke="#22110c" stroke-width="4.5" fill="none" />
+      <!-- Arch Rib Braces -->
+      <rect x="26" y="24" width="3" height="16" fill="#3d1d14" />
+      <rect x="48" y="16" width="4" height="24" fill="#3d1d14" />
+      <rect x="71" y="24" width="3" height="16" fill="#3d1d14" />
+      <!-- Diagonal Cross Trestle Beams -->
+      <line x1="26" y1="26" x2="48" y2="38" stroke="#26120b" stroke-width="2" />
+      <line x1="48" y1="38" x2="71" y2="26" stroke="#26120b" stroke-width="2" />
+
+      <!-- Main Deck Curved Beam (Deep Shadow Layer) -->
+      <path d="M 4,34 Q 50,2 96,34" stroke="#661309" stroke-width="6" fill="none" />
+      <!-- Brilliant Vermilion Red Deck Face -->
+      <path d="M 4,32 Q 50,0 96,32" stroke="#d9381e" stroke-width="4" fill="none" />
+      <!-- Upper Highlight Plank Ridge -->
+      <path d="M 6,30 Q 50,-1 94,30" stroke="#ff5c3b" stroke-width="1.5" fill="none" />
+
+      <!-- Deck Stepped Wood Planks Pattern -->
+      <line x1="16" y1="26" x2="16" y2="29" stroke="#7a180b" stroke-width="1.5" />
+      <line x1="26" y1="20" x2="26" y2="23" stroke="#7a180b" stroke-width="1.5" />
+      <line x1="38" y1="16" x2="38" y2="19" stroke="#7a180b" stroke-width="1.5" />
+      <line x1="50" y1="14" x2="50" y2="17" stroke="#7a180b" stroke-width="1.5" />
+      <line x1="62" y1="16" x2="62" y2="19" stroke="#7a180b" stroke-width="1.5" />
+      <line x1="74" y1="20" x2="74" y2="23" stroke="#7a180b" stroke-width="1.5" />
+      <line x1="84" y1="26" x2="84" y2="29" stroke="#7a180b" stroke-width="1.5" />
+
+      <!-- 7 Majestic Vertical Balusters with Golden Brass Caps (Giboshi) -->
+      <!-- Post 1 (Left End) -->
+      <rect x="6" y="24" width="3.5" height="12" fill="#d9381e" />
+      <rect x="5.5" y="21" width="4.5" height="3" fill="#f4b41b" />
+      <rect x="7" y="19" width="1.5" height="2" fill="#ffe26a" />
+
+      <!-- Post 2 -->
+      <rect x="20" y="17" width="3.5" height="13" fill="#d9381e" />
+      <rect x="19.5" y="14" width="4.5" height="3" fill="#f4b41b" />
+      <rect x="21" y="12" width="1.5" height="2" fill="#ffe26a" />
+
+      <!-- Post 3 -->
+      <rect x="34" y="12" width="3.5" height="14" fill="#d9381e" />
+      <rect x="33.5" y="9" width="4.5" height="3" fill="#f4b41b" />
+      <rect x="35" y="7" width="1.5" height="2" fill="#ffe26a" />
+
+      <!-- Post 4 (Center High Apex) -->
+      <rect x="48.2" y="10" width="3.6" height="15" fill="#d9381e" />
+      <rect x="47.7" y="7" width="4.6" height="3" fill="#f4b41b" />
+      <rect x="49.2" y="5" width="1.6" height="2" fill="#ffe26a" />
+
+      <!-- Post 5 -->
+      <rect x="63" y="12" width="3.5" height="14" fill="#d9381e" />
+      <rect x="62.5" y="9" width="4.5" height="3" fill="#f4b41b" />
+      <rect x="64" y="7" width="1.5" height="2" fill="#ffe26a" />
+
+      <!-- Post 6 -->
+      <rect x="77" y="17" width="3.5" height="13" fill="#d9381e" />
+      <rect x="76.5" y="14" width="4.5" height="3" fill="#f4b41b" />
+      <rect x="78" y="12" width="1.5" height="2" fill="#ffe26a" />
+
+      <!-- Post 7 (Right End) -->
+      <rect x="91" y="24" width="3.5" height="12" fill="#d9381e" />
+      <rect x="90.5" y="21" width="4.5" height="3" fill="#f4b41b" />
+      <rect x="92" y="19" width="1.5" height="2" fill="#ffe26a" />
+
+      <!-- Top Handrail (Sweeping Arch Passing through All Posts) -->
+      <path d="M 6,24 Q 50,-8 94,24" stroke="#7a180b" stroke-width="3" fill="none" />
+      <path d="M 6,23 Q 50,-9 94,23" stroke="#ff4422" stroke-width="1.8" fill="none" />
+
+      <!-- Lower Safety Rail -->
+      <path d="M 7,28 Q 50,-3 93,28" stroke="#7a180b" stroke-width="1.5" fill="none" />
+    </svg>
+
+    <!-- 5. Fine White Raked Sand with Pebble Ripples -->
+    <div class="zen-ground">
+      <div class="zen-ripples"></div>
+    </div>
+  </div>
+
   <audio id="alarmSound" src="assets/timesup.mp3" preload="auto"></audio>
 
-  <!-- Extension & User Scripts preserved -->
+  <!-- Extension & User Scripts -->
   <script src="content.js"></script>
   <script src="newtab.js"></script>
 </body>
