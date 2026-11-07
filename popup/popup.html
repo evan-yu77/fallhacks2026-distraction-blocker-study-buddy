@@ -144,8 +144,8 @@
       background: #388e3c;
       color: #fff;
       box-shadow: 0 4px 0 #1b4d20, inset 2px 2px 0 #66bb6a;
-      flex: 1;
     }
+
     #startBtn:hover {
       background: #43a047;
     }
@@ -202,10 +202,9 @@
     }
 
     .time-input-group {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      width: 100%;
+      width: 65px; /* Widened to fit the retro font */
+      text-align: center;
+      padding: 9px 4px;
     }
 
     #minutes {
@@ -427,9 +426,9 @@
 
     <!-- Duration Input & Start Study Button -->
     <div class="time-input-group">
-      <input id="minutes" type="number" value="25" min="0" placeholder="Min" style="width: 45px;">
+      <input id="minutes" type="number" value="25" min="0" placeholder="Min">
       <span style="color: var(--wood-dark); font-weight: bold;">:</span>
-      <input id="seconds" type="number" value="00" min="0" max="59" placeholder="Sec" style="width: 45px;">
+      <input id="seconds" type="number" value="00" min="0" max="59" placeholder="Sec">
       <button id="startBtn">Start</button>
     </div>
 
