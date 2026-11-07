@@ -1,27 +1,489 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>Digital Side-Kick</title>
+  
+  <!-- Pixel Art Google Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================
+       PIXEL ART RESET & AUTUMN PALETTE
+       ========================================================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    :root {
+      --sky-top: #3b2d54;
+      --sky-mid: #9c4f43;
+      --sky-bottom: #e59b58;
+      --ground-top: #3d1e13;
+      --ground-dark: #200f09;
+      --gold: #f4b41b;
+      --amber: #e66b27;
+      --rust-red: #a3281b;
+      --wood-light: #442416;
+      --wood-dark: #27140b;
+      --ui-bg: #fff0d4;
+      --ui-border: #27140b;
+      --ui-shadow: #c99365;
+    }
+
+    body {
+      width: 360px;
+      min-height: 580px;
+      margin: 0 auto;
+      font-family: 'Press Start 2P', monospace;
+      color: #27140b;
+      background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 40%, var(--sky-bottom) 75%, #ba6336 100%);
+      position: relative;
+      overflow-x: hidden;
+      padding: 18px 14px 60px 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Pixelated Scanline Overlay */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.08) 0px,
+        rgba(0, 0, 0, 0.08) 2px,
+        transparent 2px,
+        transparent 4px
+      );
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    /* Container */
+    .popup-wrapper {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* ==========================================================
+       HEADER & JEPPY BADGE
+       ========================================================== */
+    .title-badge {
+      background: var(--ui-bg);
+      border: 3px solid var(--ui-border);
+      box-shadow: 
+        4px 4px 0px rgba(0, 0, 0, 0.4),
+        inset -3px -3px 0px var(--ui-shadow);
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      position: relative;
+    }
+
+    h2 {
+      font-size: 11px;
+      line-height: 1.4;
+      color: #7b180d;
+      text-shadow: 1px 1px 0px #fce2bd;
+      letter-spacing: 0.5px;
+      text-align: center;
+    }
+
+    /* Jeppy the Owl Icon */
+    .jeppy-mini {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .jeppy-eyes {
+      animation: blink 4s infinite;
+      transform-origin: 5px 3px;
+    }
+
+    @keyframes blink {
+      0%, 94%, 98%, 100% { transform: scaleY(1); }
+      96% { transform: scaleY(0.1); }
+    }
+
+    /* ==========================================================
+       RETRO BUTTONS & INPUTS
+       ========================================================== */
+    button {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 9px;
+      cursor: pointer;
+      border: 3px solid #27140b;
+      outline: none;
+      padding: 10px 12px;
+      transition: transform 0.05s, box-shadow 0.05s;
+    }
+
+    button:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 #27140b !important;
+    }
+
+    /* Green / Amber Start Button */
+    #startBtn {
+      background: #388e3c;
+      color: #fff;
+      box-shadow: 0 4px 0 #1b4d20, inset 2px 2px 0 #66bb6a;
+      flex: 1;
+    }
+    #startBtn:hover {
+      background: #43a047;
+    }
+
+    /* Orange / Rust Action Buttons */
+    #saveBtn {
+      width: 100%;
+      background: #e66b27;
+      color: #fff8ee;
+      box-shadow: 0 4px 0 #8c3809, inset 2px 2px 0 #f49d23;
+      margin-top: 4px;
+    }
+    #saveBtn:hover {
+      background: #f27935;
+    }
+
+    /* Pause Button */
+    #pauseBtn {
+      width: 100%;
+      background: #8d6e63;
+      color: #fff;
+      box-shadow: 0 4px 0 #4e342e, inset 2px 2px 0 #a1887f;
+      margin-top: 6px;
+    }
+
+    /* Inputs */
+    input[type="number"],
+    input[type="text"] {
+      font-family: 'Press Start 2P', monospace;
+      background: #fff8ee;
+      color: var(--wood-dark);
+      border: 3px solid var(--wood-dark);
+      outline: none;
+      padding: 8px 10px;
+      font-size: 10px;
+      box-shadow: 
+        3px 3px 0px rgba(0, 0, 0, 0.25),
+        inset 2px 2px 0px #deb887;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      margin-bottom: 8px;
+    }
+
+    input[type="text"]::placeholder {
+      color: #9f7b60;
+      font-size: 9px;
+    }
+
+    input:focus {
+      background: #fff;
+      box-shadow: 3px 3px 0px #000, inset 2px 2px 0px #f4b41b;
+    }
+
+    .time-input-group {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      width: 100%;
+    }
+
+    #minutes {
+      width: 68px;
+      text-align: center;
+      padding: 9px 4px;
+    }
+
+    /* ==========================================================
+       TIMER & STATUS PANELS
+       ========================================================== */
+    .timer-container {
+      background: var(--wood-light);
+      border: 3px solid var(--wood-dark);
+      outline: 3px solid #f4b41b;
+      box-shadow: 
+        0 6px 0 0 rgba(0, 0, 0, 0.4),
+        inset -3px -3px 0px #241108,
+        inset 3px 3px 0px #6d3a24;
+      padding: 14px 10px;
+      text-align: center;
+    }
+
+    #timer {
+      font-size: 32px;
+      color: #fff4d1;
+      background: #1e110a;
+      border: 3px solid #63331a;
+      padding: 10px 4px;
+      margin-bottom: 10px;
+      letter-spacing: 2px;
+      text-shadow: 2px 2px 0px #c7381b;
+      box-shadow: inset 3px 3px 0px #000000;
+    }
+
+    #leaves {
+      font-size: 9px;
+      color: #ffc478;
+      text-shadow: 1px 1px 0px #000;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 6px 8px;
+      border: 2px dashed #a55a30;
+      line-height: 1.4;
+    }
+
+    /* Pixel Divider */
+    hr {
+      border: none;
+      height: 4px;
+      background: repeating-linear-gradient(
+        90deg,
+        #f4b41b 0px,
+        #f4b41b 6px,
+        transparent 6px,
+        transparent 12px
+      );
+      margin: 4px 0;
+    }
+
+    /* Blocklist Section */
+    .blocklist-panel {
+      background: var(--ui-bg);
+      border: 3px solid var(--ui-border);
+      box-shadow: 
+        4px 4px 0px rgba(0, 0, 0, 0.35),
+        inset -3px -3px 0px var(--ui-shadow);
+      padding: 12px 10px;
+    }
+
+    .blocklist-panel h3 {
+      font-size: 9px;
+      color: #7b180d;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    #saveStatus {
+      font-size: 9px !important;
+      color: #1b5e20 !important;
+      text-shadow: 1px 1px 0px #c8e6c9;
+      margin-top: 8px;
+      text-align: center;
+      background: #e8f5e9;
+      border: 2px solid #2e7d32;
+      padding: 5px;
+    }
+
+    /* ==========================================================
+       PIXEL ART SCENERY & SWAYING TREES
+       ========================================================== */
+    .forest-ground-layer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 100px;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .pixel-ground {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 24px;
+      background: var(--ground-top);
+      border-top: 4px solid #63331a;
+      box-shadow: inset 0 -8px 0 0 var(--ground-dark);
+      z-index: 6;
+    }
+
+    .tree {
+      position: absolute;
+      bottom: 20px;
+      transform-origin: bottom center;
+    }
+
+    @keyframes windSwayLeft {
+      0%, 100% { transform: rotate(0deg) skewX(0deg); }
+      35% { transform: rotate(-3deg) skewX(-2deg); }
+      70% { transform: rotate(1.5deg) skewX(1deg); }
+    }
+
+    @keyframes windSwayRight {
+      0%, 100% { transform: rotate(0deg) skewX(0deg); }
+      30% { transform: rotate(3.5deg) skewX(2.5deg); }
+      75% { transform: rotate(-2deg) skewX(-1.5deg); }
+    }
+
+    .tree-left {
+      left: -12px;
+      width: 110px;
+      height: 140px;
+      animation: windSwayLeft 5.5s ease-in-out infinite;
+      z-index: 5;
+    }
+
+    .tree-right {
+      right: -15px;
+      width: 120px;
+      height: 155px;
+      animation: windSwayRight 6.5s ease-in-out infinite;
+      z-index: 5;
+    }
+
+    /* Drifting Leaves */
+    .leaf {
+      position: fixed;
+      width: 8px;
+      height: 8px;
+      pointer-events: none;
+      z-index: 99;
+      animation: fallAndDrift linear infinite;
+    }
+
+    @keyframes fallAndDrift {
+      0% {
+        transform: translate(0, -15px) rotate(0deg);
+        opacity: 0;
+      }
+      10% { opacity: 1; }
+      50% { transform: translate(40px, 45vh) rotate(180deg); }
+      90% { opacity: 1; }
+      100% {
+        transform: translate(80px, 105vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    .leaf-1 { left: 10%; animation-duration: 7s; animation-delay: 0s; }
+    .leaf-2 { left: 45%; animation-duration: 9s; animation-delay: 2s; }
+    .leaf-3 { left: 80%; animation-duration: 6s; animation-delay: 3.5s; }
+  </style>
 </head>
 <body>
-  <h2>Digital Side-Kick</h2>
 
-  <input id="minutes" type="number" value="25" min="1">
-  <button id="startBtn">Start Studying</button>
+  <!-- Drifting Pixel Leaves -->
+  <svg class="leaf leaf-1" viewBox="0 0 4 4" shape-rendering="crispEdges">
+    <rect x="1" y="0" width="2" height="1" fill="#f4b41b" />
+    <rect x="0" y="1" width="4" height="2" fill="#e66b27" />
+    <rect x="1" y="3" width="2" height="1" fill="#a3281b" />
+  </svg>
+  <svg class="leaf leaf-2" viewBox="0 0 4 4" shape-rendering="crispEdges">
+    <rect x="1" y="0" width="2" height="1" fill="#a3281b" />
+    <rect x="0" y="1" width="4" height="2" fill="#c4431e" />
+    <rect x="1" y="3" width="2" height="1" fill="#801c13" />
+  </svg>
+  <svg class="leaf leaf-3" viewBox="0 0 4 4" shape-rendering="crispEdges">
+    <rect x="1" y="0" width="2" height="1" fill="#ffd043" />
+    <rect x="0" y="1" width="4" height="2" fill="#f4b41b" />
+    <rect x="1" y="3" width="2" height="1" fill="#bd7613" />
+  </svg>
 
-  <h1 id="timer">25:00</h1>
-  <p id="leaves">Leaves collected: 0 🍃</p>
-
-  <hr> <!-- Visual divider -->
-
-    <!-- New Blocklist Section -->
-    <div>
-        <h3>Block a Website</h3>
-        <input type="text" id="siteInput" placeholder="e.g., youtube.com">
-        <button id="saveBtn">Add to Blocklist</button>
-        <button id="pauseBtn" style="display: none;">Pause</button>
-        <p id="saveStatus" style="color: green; font-size: 0.8em; display: none;">Saved!</p>
+  <!-- Interactive Popup Interface -->
+  <div class="popup-wrapper">
+    
+    <!-- Title Banner with Jeppy Owl -->
+    <div class="title-badge">
+      <svg class="jeppy-mini" viewBox="0 0 10 10" shape-rendering="crispEdges">
+        <rect x="2" y="2" width="6" height="7" fill="#54301a" />
+        <rect x="2" y="0" width="2" height="2" fill="#381e0f" />
+        <rect x="6" y="0" width="2" height="2" fill="#381e0f" />
+        <rect x="3" y="5" width="4" height="4" fill="#deb887" />
+        <g class="jeppy-eyes">
+          <rect x="2" y="2" width="3" height="3" fill="#fff" />
+          <rect x="5" y="2" width="3" height="3" fill="#fff" />
+          <rect x="3" y="3" width="1" height="2" fill="#e69c24" />
+          <rect x="6" y="3" width="1" height="2" fill="#e69c24" />
+          <rect x="4" y="3" width="2" height="2" fill="#f25f1c" />
+        </g>
+      </svg>
+      <h2>Digital Side-Kick</h2>
     </div>
+
+    <!-- Duration Input & Start Study Button -->
+    <div class="time-input-group">
+      <input id="minutes" type="number" value="25" min="1">
+      <button id="startBtn">Start Studying</button>
+    </div>
+
+    <!-- Focus Timer Panel -->
+    <div class="timer-container">
+      <h1 id="timer">25:00</h1>
+      <p id="leaves">Leaves collected: 0 🍃</p>
+    </div>
+
+    <!-- Visual divider -->
+    <hr>
+
+    <!-- Blocklist Panel -->
+    <div class="blocklist-panel">
+      <h3>
+        <svg width="10" height="10" viewBox="0 0 8 8" shape-rendering="crispEdges">
+          <rect x="2" y="0" width="4" height="8" fill="#a3281b" />
+          <rect x="0" y="2" width="8" height="4" fill="#a3281b" />
+          <rect x="2" y="2" width="4" height="4" fill="#f4b41b" />
+        </svg>
+        Block a Website
+      </h3>
+      <input type="text" id="siteInput" placeholder="e.g., youtube.com">
+      <button id="saveBtn">Add to Blocklist</button>
+      <button id="pauseBtn" style="display: none;">Pause</button>
+      <p id="saveStatus" style="display: none;">Saved!</p>
+    </div>
+
+  </div>
+
+  <!-- Swaying Trees and Ground at the base of the popup -->
+  <div class="forest-ground-layer">
+    <!-- Left Tree (Crimson / Orange) -->
+    <svg class="tree tree-left" viewBox="0 0 48 64" shape-rendering="crispEdges">
+      <rect x="20" y="36" width="8" height="28" fill="#2d130a" />
+      <rect x="18" y="46" width="3" height="18" fill="#462012" />
+      <rect x="8" y="20" width="32" height="20" fill="#681912" />
+      <rect x="6" y="18" width="34" height="16" fill="#a42817" />
+      <rect x="10" y="10" width="28" height="22" fill="#c6471e" />
+      <rect x="14" y="6" width="20" height="24" fill="#e66b27" />
+      <rect x="18" y="3" width="10" height="8" fill="#fed65b" />
+    </svg>
+
+    <!-- Right Tree (Amber / Golden) -->
+    <svg class="tree tree-right" viewBox="0 0 48 64" shape-rendering="crispEdges">
+      <rect x="20" y="34" width="8" height="30" fill="#271108" />
+      <rect x="22" y="34" width="4" height="30" fill="#442113" />
+      <rect x="6" y="16" width="36" height="22" fill="#7a2a11" />
+      <rect x="8" y="14" width="30" height="18" fill="#dd611d" />
+      <rect x="14" y="6" width="22" height="22" fill="#f49923" />
+      <rect x="18" y="2" width="14" height="14" fill="#ffd043" />
+    </svg>
+
+    <!-- Ground base -->
+    <div class="pixel-ground"></div>
+  </div>
 
   <script src="popup.js"></script>
 </body>
