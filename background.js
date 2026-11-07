@@ -72,3 +72,43 @@ chrome.alarms.onAlarm.addListener((alarm) => {
         // Optional: Trigger break time animation logic here
     }
 });
+
+// Listen for messages from popup.js
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === "start") {
+        // Use total duration to keep the interval consistent even after pausing
+        const leafInterval = request.duration / 5; 
+        
+        chrome.alarms.create('leafDrop', { periodInMinutes: leafInterval });
+        // Use remaining time for the actual end of session
+        chrome.alarms.create('sessionEnd', { delayInMinutes: request.remaining });
+        
+    } else if (request.action === "stop") {
+        chrome.alarms.clearAll();
+    }
+});
+
+// Handle the alarms when they trigger
+chrome.alarms.onAlarm.addListener((alarm) => {
+    if (alarm.name === 'leafDrop') {
+        
+        // The popup is now handling the math. This alarm is strictly to tell 
+        // active browser tabs to run the falling leaf CSS animation!
+        chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+            if (tabs.length > 0) {
+                chrome.tabs.sendMessage(tabs[0].id, { action: "animateLeaf" });
+            }
+        });
+        
+    } else if (alarm.name === 'sessionEnd') {
+        chrome.alarms.clearAll();
+        chrome.storage.local.set({ isStudying: false });
+        
+        // Tell active tabs to scatter the leaves for the break!
+        chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+            if (tabs.length > 0) {
+                chrome.tabs.sendMessage(tabs[0].id, { action: "scatterLeaves" });
+            }
+        });
+    }
+});

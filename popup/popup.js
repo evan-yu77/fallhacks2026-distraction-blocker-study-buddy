@@ -2,27 +2,24 @@ document.addEventListener("DOMContentLoaded", async () => {
   const startBtn = document.getElementById("startBtn");
   const pauseBtn = document.getElementById("pauseBtn");
 
-  // 1. Check if the timer is already running/paused when popup opens
+  // Check initial state
   const initData = await chrome.storage.local.get(["sessionActive", "sessionPaused"]);
   if (initData.sessionActive) {
     startBtn.textContent = "Stop Studying";
     pauseBtn.style.display = "inline-block";
-    if (initData.sessionPaused) {
-      pauseBtn.textContent = "Resume";
-    } else {
-      pauseBtn.textContent = "Pause";
-    }
+    pauseBtn.textContent = initData.sessionPaused ? "Resume" : "Pause";
   }
 
-  // 2. Toggle function for Start/Stop
+  // START / STOP LOGIC
   async function toggleTimer() {
     const data = await chrome.storage.local.get(["sessionActive"]);
 
     if (data.sessionActive) {
-      // --- STOP LOGIC ---
+      // STOP
       await chrome.storage.local.set({ 
         sessionActive: false,
-        sessionPaused: false
+        sessionPaused: false,
+        leafCount: 0 
       });
       
       startBtn.textContent = "Start Studying";
@@ -35,132 +32,110 @@ document.addEventListener("DOMContentLoaded", async () => {
       chrome.runtime.sendMessage({ action: "stop" }); 
       
     } else {
-      // --- START LOGIC ---
+      // START
       const minutes = Number(document.getElementById("minutes").value);
       if (minutes < 1 || !Number.isFinite(minutes)) return;
 
       const duration = minutes * 60 * 1000;
-      const startTime = Date.now();
-      const endTime = startTime + duration;
+      const endTime = Date.now() + duration;
 
       await chrome.storage.local.set({
         sessionActive: true,
         sessionPaused: false,
         sessionEndTime: endTime,
         studyDuration: minutes,
-        pausedRemainingTime: 0
+        pausedRemainingTime: 0,
+        leafCount: 0 
       });
 
       startBtn.textContent = "Stop Studying";
       pauseBtn.style.display = "inline-block";
       pauseBtn.textContent = "Pause";
       
-      chrome.runtime.sendMessage({ action: "start", minutes: minutes });
-      
+      chrome.runtime.sendMessage({ action: "start", duration: minutes, remaining: minutes });
       updateTimer();
     }
   }
 
-  // 3. Toggle function for Pause/Resume
+  // PAUSE / RESUME LOGIC
   async function togglePause() {
     const data = await chrome.storage.local.get([
-      "sessionActive", 
-      "sessionPaused", 
-      "sessionEndTime"
+      "sessionActive", "sessionPaused", "sessionEndTime", "studyDuration"
     ]);
 
     if (!data.sessionActive) return;
 
     if (data.sessionPaused) {
-      // --- RESUME LOGIC ---
+      // RESUME
       const dataPaused = await chrome.storage.local.get(["pausedRemainingTime"]);
       const newEndTime = Date.now() + dataPaused.pausedRemainingTime;
 
-      await chrome.storage.local.set({
-        sessionPaused: false,
-        sessionEndTime: newEndTime
-      });
-
+      await chrome.storage.local.set({ sessionPaused: false, sessionEndTime: newEndTime });
       pauseBtn.textContent = "Pause";
       
-      // Tell background to resume alarms using the remaining time
-      const remainingMinutes = dataPaused.pausedRemainingTime / (60 * 1000);
-      chrome.runtime.sendMessage({ action: "start", minutes: remainingMinutes });
+      const remainingMinutes = dataPaused.pausedRemainingTime / 60000;
+      chrome.runtime.sendMessage({ action: "start", duration: data.studyDuration, remaining: remainingMinutes });
 
     } else {
-      // --- PAUSE LOGIC ---
+      // PAUSE
       const remainingTime = Math.max(0, data.sessionEndTime - Date.now());
 
-      await chrome.storage.local.set({
-        sessionPaused: true,
-        pausedRemainingTime: remainingTime
-      });
-
+      await chrome.storage.local.set({ sessionPaused: true, pausedRemainingTime: remainingTime });
       pauseBtn.textContent = "Resume";
-      
-      // Tell background to stop alarms so leaves don't drop while paused
       chrome.runtime.sendMessage({ action: "stop" });
     }
   }
 
-  // 4. Update the visual timer and leaf count
+  // TIMER & LEAF MATH
   async function updateTimer() {
     const data = await chrome.storage.local.get([
-      "sessionActive",
-      "sessionPaused",
-      "sessionEndTime",
-      "studyDuration",
-      "pausedRemainingTime"
+      "sessionActive", "sessionPaused", "sessionEndTime", "studyDuration", "pausedRemainingTime"
     ]);
 
     if (!data.sessionActive) return;
 
-    // Safe fallbacks to prevent undefined math errors on startup
-    const durationMs = (data.studyDuration || 25) * 60 * 1000;
-    let remaining;
-    
+    // 1. Calculate how many seconds are remaining
+    let remainingMs = 0;
     if (data.sessionPaused) {
-      remaining = data.pausedRemainingTime || 0;
+      remainingMs = data.pausedRemainingTime || 0;
     } else {
-      // If sessionEndTime is missing, default to now so remaining = 0
       const targetEnd = data.sessionEndTime || Date.now();
-      remaining = Math.max(0, targetEnd - Date.now());
+      remainingMs = Math.max(0, targetEnd - Date.now());
     }
 
-    // Format the clock
-    const totalSeconds = Math.ceil(remaining / 1000);
-    const minutesLeft = Math.floor(totalSeconds / 60);
-    const secondsLeft = totalSeconds % 60;
+    const totalSecondsLeft = Math.ceil(remainingMs / 1000);
+    const minutesLeft = Math.floor(totalSecondsLeft / 60);
+    const secondsLeft = totalSecondsLeft % 60;
 
+    // Update Clock UI
     document.getElementById("timer").textContent =
       minutesLeft + ":" + String(secondsLeft).padStart(2, "0");
 
-    // Bulletproof Leaf Math
-    // Ensure elapsed time never drops below 0 or goes above durationMs
-    let elapsed = durationMs - remaining;
-    elapsed = Math.max(0, Math.min(elapsed, durationMs)); 
+    // 2. Bulletproof Leaf Math (Based strictly on seconds)
+    const totalDurationSeconds = (data.studyDuration || 25) * 60;
+    const elapsedSeconds = Math.max(0, totalDurationSeconds - totalSecondsLeft);
     
     // Calculates exactly which 1/5th interval we are in
-    const leaves = Math.floor(elapsed / (durationMs / 5));
+    const secondsPerLeaf = totalDurationSeconds / 5;
+    let leaves = Math.floor(elapsedSeconds / secondsPerLeaf);
+    
+    // Clamp the leaves between 0 and 5 just to be safe
+    leaves = Math.max(0, Math.min(leaves, 5));
 
-    document.getElementById("leaves").textContent =
-      "Leaves collected: " + leaves + " 🍃";
+    // Update Leaves UI and Storage
+    document.getElementById("leaves").textContent = `Leaves collected: ${leaves} 🍃`;
+    chrome.storage.local.set({ leafCount: leaves });
 
-    // End of Session handling
-    if (remaining === 0 && !data.sessionPaused) {
+    // 3. End of Session
+    if (remainingMs <= 0 && !data.sessionPaused) {
       await chrome.storage.local.set({ sessionActive: false, sessionPaused: false });
       document.getElementById("timer").textContent = "Done!";
-      
-      // Reset buttons
-      const startBtn = document.getElementById("startBtn");
-      const pauseBtn = document.getElementById("pauseBtn");
-      if (startBtn) startBtn.textContent = "Start Studying";
-      if (pauseBtn) pauseBtn.style.display = "none";
+      startBtn.textContent = "Start Studying";
+      pauseBtn.style.display = "none";
     }
   }
 
-
-  // 5. Attach Event Listeners
+  // EVENT LISTENERS
   startBtn.addEventListener("click", toggleTimer);
   pauseBtn.addEventListener("click", togglePause);
 
@@ -184,41 +159,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     chrome.storage.local.get(["blockedSites"], (result) => {
-      if (chrome.runtime.lastError) {
-        status.textContent = "Could not read the blocklist.";
-        status.style.color = "red";
-        status.style.display = "block";
-        return;
-      }
-
+      if (chrome.runtime.lastError) return;
       const sites = result.blockedSites || [];
-      if (sites.includes(hostname)) {
-        status.textContent = `${hostname} is already blocked.`;
-        status.style.color = "red";
-        status.style.display = "block";
-        return;
-      }
+      if (sites.includes(hostname)) return;
 
       chrome.storage.local.set({ blockedSites: [...sites, hostname] }, () => {
-        if (chrome.runtime.lastError) {
-          status.textContent = "Could not save the blocklist.";
-          status.style.color = "red";
-          status.style.display = "block";
-          return;
-        }
-
+        if (chrome.runtime.lastError) return;
         status.textContent = `${hostname} added to blocklist.`;
         status.style.color = "green";
         status.style.display = "block";
         siteInput.value = "";
-        setTimeout(() => {
-          status.style.display = "none";
-        }, 2000);
+        setTimeout(() => { status.style.display = "none"; }, 2000);
       });
     });
   });
 
-  // 6. Start the interval loop
+  // START LOOP
   updateTimer();
   setInterval(updateTimer, 1000);
 });
