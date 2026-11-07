@@ -427,8 +427,10 @@
 
     <!-- Duration Input & Start Study Button -->
     <div class="time-input-group">
-      <input id="minutes" type="number" value="25" min="1">
-      <button id="startBtn">Start Studying</button>
+      <input id="minutes" type="number" value="25" min="0" placeholder="Min" style="width: 45px;">
+      <span style="color: var(--wood-dark); font-weight: bold;">:</span>
+      <input id="seconds" type="number" value="00" min="0" max="59" placeholder="Sec" style="width: 45px;">
+      <button id="startBtn">Start</button>
     </div>
 
     <!-- Focus Timer Panel -->

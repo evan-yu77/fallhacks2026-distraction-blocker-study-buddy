@@ -32,18 +32,26 @@ document.addEventListener("DOMContentLoaded", async () => {
       chrome.runtime.sendMessage({ action: "stop" }); 
       
     } else {
-      // START
-      const minutes = Number(document.getElementById("minutes").value);
-      if (minutes < 1 || !Number.isFinite(minutes)) return;
+      // START (Now handles both minutes and seconds)
+      const minutesInput = document.getElementById("minutes");
+      const secondsInput = document.getElementById("seconds");
+      
+      const minutes = Number(minutesInput ? minutesInput.value : 0) || 0;
+      const seconds = Number(secondsInput ? secondsInput.value : 0) || 0;
 
-      const duration = minutes * 60 * 1000;
-      const endTime = Date.now() + duration;
+      // Prevent starting a timer for 0 minutes and 0 seconds
+      if (minutes === 0 && seconds === 0) return;
+
+      // Combine minutes and seconds into a single variable
+      const totalMinutes = minutes + (seconds / 60);
+      const durationMs = (minutes * 60 * 1000) + (seconds * 1000);
+      const endTime = Date.now() + durationMs;
 
       await chrome.storage.local.set({
         sessionActive: true,
         sessionPaused: false,
         sessionEndTime: endTime,
-        studyDuration: minutes,
+        studyDuration: totalMinutes, // Saves the exact fraction for leaf math
         pausedRemainingTime: 0,
         leafCount: 0 
       });
@@ -52,7 +60,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       pauseBtn.style.display = "inline-block";
       pauseBtn.textContent = "Pause";
       
-      chrome.runtime.sendMessage({ action: "start", duration: minutes, remaining: minutes });
+      chrome.runtime.sendMessage({ action: "start", duration: totalMinutes, remaining: totalMinutes });
       updateTimer();
     }
   }
@@ -128,6 +136,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // 3. End of Session
     if (remainingMs <= 0 && !data.sessionPaused) {
+      // Play the alarm sound!
+      const alarm = document.getElementById("alarmSound");
+      if (alarm) alarm.play().catch(e => console.log("Audio blocked:", e));
+
       await chrome.storage.local.set({ sessionActive: false, sessionPaused: false });
       document.getElementById("timer").textContent = "Done!";
       startBtn.textContent = "Start Studying";
