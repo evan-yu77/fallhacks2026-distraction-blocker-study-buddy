@@ -426,10 +426,31 @@
 
     <!-- Duration Input & Start Study Button -->
     <div class="time-input-group">
-      <input id="minutes" type="number" value="25" min="0" placeholder="Min">
-      <span style="color: var(--wood-dark); font-weight: bold;">:</span>
-      <input id="seconds" type="number" value="00" min="0" max="59" placeholder="Sec">
-      <button id="startBtn">Start</button>
+      <!-- Focus Row -->
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 8px; color: var(--wood-dark);">FOCUS:</span>
+        <div>
+          <input id="minutes" type="number" value="25" min="0" placeholder="Min">
+          <span style="color: var(--wood-dark); font-weight: bold;">:</span>
+          <input id="seconds" type="number" value="00" min="0" max="59" placeholder="Sec">
+        </div>
+      </div>
+
+      <!-- Break Row -->
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 8px; color: var(--wood-dark);">BREAK:</span>
+        <div>
+          <input id="breakMinutes" type="number" value="05" min="0" placeholder="Min">
+          <span style="color: var(--wood-dark); font-weight: bold;">:</span>
+          <input id="breakSeconds" type="number" value="00" min="0" max="59" placeholder="Sec">
+        </div>
+      </div>
+
+      <!-- Buttons -->
+      <div style="display: flex; gap: 8px; margin-top: 4px;">
+        <button id="startBtn" style="flex: 1;">Start</button>
+        <button id="pauseBtn" style="flex: 1; display: none;">Pause</button>
+      </div>
     </div>
 
     <!-- Focus Timer Panel -->

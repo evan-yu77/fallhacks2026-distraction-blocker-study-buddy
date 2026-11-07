@@ -132,22 +132,27 @@ document.addEventListener("DOMContentLoaded", () => {
     const minutesLeft = Math.floor(totalSecondsLeft / 60);
     const secondsLeft = totalSecondsLeft % 60;
 
-    // TIME'S UP! Start 5-Minute Zen Break
+    // TIME'S UP! Start Custom Zen Break
     if (remainingMs <= 0 && !data.sessionPaused) {
       if (!alarmPlayed && alarmSound) {
         alarmSound.play().catch(() => {});
         alarmPlayed = true;
       }
 
-      // Automatically launch 5-minute break
-      const breakDuration = 5 * 60 * 1000;
+      // Fetch the custom break duration from storage, default to 5 mins if not found
+      const breakData = await chrome.storage.local.get(["breakDurationMs"]);
+      const breakDuration = breakData.breakDurationMs || (5 * 60 * 1000);
+      
+      const breakMins = Math.floor(breakDuration / (60 * 1000));
+      const breakSecs = Math.floor((breakDuration % (60 * 1000)) / 1000);
+
       await chrome.storage.local.set({
         sessionActive: false,
         isBreakActive: true,
         breakEndTime: Date.now() + breakDuration
       });
 
-      setZenBreakMode(true, 5, 0);
+      setZenBreakMode(true, breakMins, breakSecs);
       return;
     }
 
