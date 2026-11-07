@@ -130,6 +130,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   let previousPhase = null;
   async function updateTimer() {
     const data = await SidekickTimer.read();
+    document.body.classList.toggle(
+      "is-break",
+      data.sessionActive && data.sessionPhase === "break"
+    );
     const active = Boolean(data.sessionActive);
     startBtn.textContent = active ? "Stop" : "Start";
     pauseBtn.style.display = active ? "inline-block" : "none";

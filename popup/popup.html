@@ -416,6 +416,52 @@
     }
 
     .delete-btn:hover { background: #d32f2f; }
+  
+/* ZEN BREAK THEME */
+body.is-break {
+  background: linear-gradient(
+    180deg,
+    #2c443b 0%,
+    #688a75 40%,
+    #cbe3d3 75%,
+    #d5e5db 100%
+  );
+}
+
+/* Change timer panel colours */
+body.is-break .timer-container {
+  background: #24382c;
+  border-color: #15241b;
+  outline-color: #d9381e;
+}
+
+/* Change timer display */
+body.is-break #timer {
+  background: #0e1712;
+  color: white;
+  border-color: #2e4d3b;
+  text-shadow: 2px 2px 0 #d9381e;
+}
+
+/* Hide falling autumn leaves */
+body.is-break .leaf {
+  display: none;
+}
+
+/* Change ground to Zen sand */
+body.is-break .pixel-ground {
+  background: #eae5d8;
+  border-top-color: #b3a992;
+  box-shadow: inset 0 -8px 0 #c2baa8;
+}
+
+/* Change header and blocklist colours */
+body.is-break .title-badge,
+body.is-break .blocklist-panel {
+  background: #eef7f0;
+  border-color: #1e3328;
+}
+
   </style>
 </head>
 <body>
