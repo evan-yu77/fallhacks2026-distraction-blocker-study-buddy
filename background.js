@@ -40,3 +40,35 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
         }
     });
 });
+
+// Listen for messages from popup.js
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === "start") {
+        // For the hackathon MVP, drop 5 leaves evenly across the study time
+        // (You can plug in your prime number math function here)
+        const leafInterval = request.minutes / 5; 
+        
+        chrome.alarms.create('leafDrop', { periodInMinutes: leafInterval });
+        chrome.alarms.create('sessionEnd', { delayInMinutes: request.minutes });
+        
+    } else if (request.action === "stop") {
+        // Kills the timer immediately
+        chrome.alarms.clearAll();
+    }
+});
+
+// Handle the alarms when they trigger
+chrome.alarms.onAlarm.addListener((alarm) => {
+    if (alarm.name === 'leafDrop') {
+        // Increment the leaf counter in storage
+        chrome.storage.local.get(['leafCount'], (result) => {
+            let count = (result.leafCount || 0) + 1;
+            chrome.storage.local.set({ 'leafCount': count });
+        });
+        
+    } else if (alarm.name === 'sessionEnd') {
+        chrome.alarms.clearAll();
+        chrome.storage.local.set({ isStudying: false });
+        // Optional: Trigger break time animation logic here
+    }
+});

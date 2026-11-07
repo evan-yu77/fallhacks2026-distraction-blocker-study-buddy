@@ -27,9 +27,6 @@
       "resources": ["assets/mascot.png"],
       "matches": ["http://*/*", "https://*/*"]
     }
-  ],
-  "chrome_url_overrides": {
-  "newtab": "newtab.html"
-}
+]
   
 }
