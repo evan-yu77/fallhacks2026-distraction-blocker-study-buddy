@@ -91,6 +91,41 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
+  // --- BLOCKLIST RENDERING & DELETION ---
+  function renderBlocklist() {
+    chrome.storage.local.get(["blockedSites"], (result) => {
+      const list = document.getElementById("blockedList");
+      if (!list) return;
+      
+      list.innerHTML = ""; // Clear current list
+      const sites = result.blockedSites || [];
+      
+      sites.forEach(site => {
+        const li = document.createElement("li");
+        li.textContent = site;
+        
+        // Create the delete button
+        const delBtn = document.createElement("button");
+        delBtn.textContent = "X";
+        delBtn.className = "delete-btn";
+        
+        // Add delete logic
+        delBtn.addEventListener("click", () => {
+          const updatedSites = sites.filter(s => s !== site);
+          chrome.storage.local.set({ blockedSites: updatedSites }, () => {
+            renderBlocklist(); // Re-render the list once deleted
+          });
+        });
+        
+        li.appendChild(delBtn);
+        list.appendChild(li);
+      });
+    });
+  }
+  
+  // Call it immediately so the list loads when you open the popup
+  renderBlocklist();
+
   // Both views read exactly the same stored focus/break phase.
   let previousPhase = null;
   async function updateTimer() {
@@ -156,6 +191,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         status.style.color = "green";
         status.style.display = "block";
         siteInput.value = "";
+
+        renderBlocklist();
+        
         setTimeout(() => { status.style.display = "none"; }, 2000);
       });
     });

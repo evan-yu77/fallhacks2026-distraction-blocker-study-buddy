@@ -382,6 +382,40 @@
     .leaf-1 { left: 10%; animation-duration: 7s; animation-delay: 0s; }
     .leaf-2 { left: 45%; animation-duration: 9s; animation-delay: 2s; }
     .leaf-3 { left: 80%; animation-duration: 6s; animation-delay: 3.5s; }
+
+    /* Blocklist Edit UI */
+    #blockedList {
+      list-style: none;
+      padding: 0;
+      margin-top: 10px;
+      max-height: 90px;
+      overflow-y: auto;
+      border-top: 2px solid #d5a575;
+    }
+    
+    #blockedList li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 8px;
+      padding: 6px 2px;
+      border-bottom: 2px dashed #d5a575;
+      color: var(--wood-dark);
+      letter-spacing: 0.5px;
+    }
+
+    .delete-btn {
+      background: #c62828;
+      color: white;
+      border: 2px solid #5f0909;
+      padding: 6px;
+      font-size: 8px;
+      box-shadow: inset 1px 1px 0px #e57373, 2px 2px 0px rgba(0,0,0,0.3);
+      margin-top: 0;
+      width: auto;
+    }
+
+    .delete-btn:hover { background: #d32f2f; }
   </style>
 </head>
 <body>
@@ -475,6 +509,7 @@
       <input type="text" id="siteInput" placeholder="e.g., youtube.com">
       <button id="saveBtn">Add to Blocklist</button>
       <p id="saveStatus" style="display: none;">Saved!</p>
+      <ul id="blockedList"></ul>
     </div>
 
   </div>
