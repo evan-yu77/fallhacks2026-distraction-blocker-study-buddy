@@ -4,10 +4,11 @@
   "version": "1.0",
   "description": "Your personal study assistant",
 
-  "permissions": ["storage", "tabs"],
+  "permissions": ["storage", "tabs", "alarms"],
 
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   },
 
   "action": {
