@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "Digital Side-Kick",
+  "version": "1.0",
+  "description": "A Pomodoro study assistant that blocks distractions and tracks time with falling leaves.",
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": "assets/mascot.png"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "permissions": [
+    "storage",
+    "alarms",
+    "tabs"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "blocked/blocked.html", 
+        "assets/mascot.png", 
+        "assets/leaf.png"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
