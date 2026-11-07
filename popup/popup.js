@@ -57,5 +57,32 @@ async function updateTimer() {
 
 document.getElementById("start").addEventListener("click", startTimer);
 
+// implement the blocklist functionality 
+document.getElementById('saveBtn').addEventListener('click', () => {
+    const siteInput = document.getElementById('siteInput');
+    const siteToBlock = siteInput.value.trim();
+    
+    if (siteToBlock) {
+        // Retrieve the current blocklist, add the new site, and save it back to storage
+        chrome.storage.local.get(['blockedSites'], (result) => {
+            let sites = result.blockedSites || [];
+            // Ensure the site isn't already in the blocklist
+            if (!sites.includes(siteToBlock)) {
+                sites.push(siteToBlock);
+                chrome.storage.local.set({ 'blockedSites': sites }, () => {
+                    const status = document.getElementById('saveStatus');
+                    status.style.display = 'block';
+                    siteInput.value = '';
+                    
+                    setTimeout(() => {
+                        status.style.display = 'none';
+                    }, 2000);
+                });
+            }
+        });
+    }
+});
+
+
 updateTimer();
 setInterval(updateTimer, 1000);
