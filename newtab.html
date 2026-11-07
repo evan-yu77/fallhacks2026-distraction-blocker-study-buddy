@@ -203,6 +203,161 @@
       padding: 8px 14px;
       border: 2px dashed #a55a30;
     }
+    /* ==========================================================
+       LEAF PILE & PICKUP ANIMATION STYLES
+       ========================================================== */
+       /* ==========================================================
+       BIGGER RETRO LEAVES & PROMINENT LEAF PILE
+       ========================================================== */
+
+    /* 1. BIGGER FALLING BACKGROUND LEAVES */
+    .leaf {
+      position: fixed;
+      width: 22px;        /* Increased from 10px */
+      height: 22px;
+      pointer-events: none;
+      z-index: 9;
+      animation-name: fallAndDrift;
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
+      filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.35));
+    }
+
+    /* 2. BIGGER DROPPED GROUND LEAF (Pickup Target) */
+    .ground-pickup-leaf {
+      position: absolute;
+      bottom: 28px;
+      left: 28%;
+      width: 32px;        /* Increased from 16px */
+      height: 32px;
+      z-index: 7;
+      display: none;
+      filter: drop-shadow(0 4px 0px rgba(0, 0, 0, 0.4));
+    }
+
+    .ground-pickup-leaf.active {
+      display: block;
+      animation: dropLeaf 0.45s steps(4) forwards;
+    }
+
+    @keyframes dropLeaf {
+      0%   { transform: translateY(-60px) rotate(-90deg) scale(0.5); opacity: 0; }
+      100% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+    }
+
+    /* 3. BIGGER HELD LEAF (Carried Above Mascot) */
+    .held-leaf {
+      position: absolute;
+      top: -24px;         /* Raised above his head */
+      left: 16px;
+      width: 32px;        /* Increased from 18px */
+      height: 32px;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 8;
+      filter: drop-shadow(0 2px 0px #000);
+      transition: opacity 0.1s;
+    }
+
+    .ground-mascot.has-leaf .held-leaf {
+      opacity: 1;
+      animation: leafWiggle 0.3s steps(2) infinite;
+    }
+
+    @keyframes leafWiggle {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50%      { transform: translateY(-4px) rotate(6deg); }
+    }
+
+    /* 4. LARGE, ALWAYS-VISIBLE LEAF PILE */
+    .leaf-pile {
+      position: absolute;
+      bottom: 24px;
+      right: 18%;
+      width: 120px;       /* Increased from 52px (more than double!) */
+      height: 72px;        /* Increased from 32px */
+      z-index: 6;
+      filter: drop-shadow(0 6px 0px rgba(0, 0, 0, 0.4));
+      transform-origin: bottom center;
+    }
+
+    .leaf-pile.bounce {
+      animation: pileBounce 0.45s steps(4) 1;
+    }
+
+    @keyframes pileBounce {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.3) translateY(-10px); }
+      100% { transform: scale(1); }
+    }
+
+    /* Staging: Base layer is ALWAYS visible so you can see where the pile is! */
+    .leaf-pile .lvl-base { display: block; }
+    .leaf-pile .lvl { display: none; }
+    
+    .leaf-pile.stage-1 .lvl-1 { display: block; }
+    .leaf-pile.stage-2 .lvl-1, .leaf-pile.stage-2 .lvl-2 { display: block; }
+    .leaf-pile.stage-3 .lvl-1, .leaf-pile.stage-3 .lvl-2, .leaf-pile.stage-3 .lvl-3 { display: block; }
+    .leaf-pile.stage-4 .lvl-1, .leaf-pile.stage-4 .lvl-2, .leaf-pile.stage-4 .lvl-3, .leaf-pile.stage-4 .lvl-4 { display: block; }
+    .leaf-pile.stage-5 .lvl { display: block; }
+
+    /* Mascot Gathering Run Adjusted for the Bigger Pile */
+    .ground-mascot.gathering {
+      animation: gatherRun 3.4s steps(80) forwards !important;
+    }
+
+    @keyframes gatherRun {
+      0% {
+        left: 10%;
+        transform: scaleX(1);
+      }
+      25% {
+        left: 26%;
+        transform: scaleX(1);
+      }
+      35% {
+        left: 26%;
+        transform: scaleX(1) translateY(4px); /* Scooping down */
+      }
+      40% {
+        left: 26%;
+        transform: scaleX(1) translateY(0);
+      }
+      45% {
+        left: 30%;
+        transform: scaleX(1);
+      }
+      75% {
+        left: calc(100vw - 18% - 130px); /* Runs right up to the bigger pile */
+        transform: scaleX(1);
+      }
+      82% {
+        left: calc(100vw - 18% - 130px);
+        transform: scaleX(1) translateY(-22px); /* High victory toss jump */
+      }
+      90% {
+        left: calc(100vw - 18% - 130px);
+        transform: scaleX(1) translateY(0);
+      }
+      100% {
+        left: calc(100vw - 18% - 130px);
+        transform: scaleX(-1);
+      }
+    }
+
+    /* Floating "+1 LEAF" Pop Text */
+    .leaf-popup-text {
+      position: absolute;
+      bottom: 105px;
+      right: 19%;
+      color: #ffd043;
+      font-size: 12px;
+      text-shadow: 2px 2px 0px #000;
+      z-index: 20;
+      pointer-events: none;
+      animation: floatBadge 1.4s ease-out forwards;
+    }
+    
 
     /* ==========================================================
        PIXEL TREES & WIND SWAY ANIMATION
@@ -468,99 +623,172 @@
   </div>
 
   <!-- Swaying Trees and Ground Scenery -->
-  <div class="forest-layer">
+  <!-- ==========================================================
+       SWAYING TREES, GROUND, MASCOT & LEAF PILE
+       (Place right after </div class="content-wrapper">)
+       ========================================================== -->
+       <div class="forest-layer">
 
-    <!-- Background Tree 1 (Golden) -->
-    <svg class="tree tree-back-left" viewBox="0 0 32 48" shape-rendering="crispEdges">
-      <rect x="14" y="24" width="4" height="24" fill="#2b150c" />
-      <rect x="8" y="14" width="16" height="18" fill="#d4791e" />
-      <rect x="10" y="8" width="12" height="18" fill="#f0a528" />
-      <rect x="12" y="4" width="8" height="12" fill="#fed65b" />
-    </svg>
+        <!-- Background Tree 1 (Golden) -->
+        <svg class="tree tree-back-left" viewBox="0 0 32 48" shape-rendering="crispEdges">
+          <rect x="14" y="24" width="4" height="24" fill="#2b150c" />
+          <rect x="8" y="14" width="16" height="18" fill="#d4791e" />
+          <rect x="10" y="8" width="12" height="18" fill="#f0a528" />
+          <rect x="12" y="4" width="8" height="12" fill="#fed65b" />
+        </svg>
+    
+        <!-- Background Tree 2 (Rust) -->
+        <svg class="tree tree-back-right" viewBox="0 0 32 48" shape-rendering="crispEdges">
+          <rect x="14" y="24" width="4" height="24" fill="#2b150c" />
+          <rect x="8" y="12" width="16" height="18" fill="#9e3019" />
+          <rect x="10" y="6" width="12" height="16" fill="#c7491d" />
+          <rect x="12" y="3" width="8" height="12" fill="#f47827" />
+        </svg>
+    
+        <!-- Foreground Left Tree (Grand Crimson & Orange Tree) -->
+        <svg class="tree tree-left" viewBox="0 0 48 64" shape-rendering="crispEdges">
+          <rect x="20" y="36" width="8" height="28" fill="#2d130a" />
+          <rect x="18" y="46" width="3" height="18" fill="#462012" />
+          <rect x="22" y="38" width="4" height="26" fill="#462012" />
+          <rect x="14" y="58" width="6" height="6" fill="#2d130a" />
+          <rect x="28" y="56" width="6" height="8" fill="#2d130a" />
+          <rect x="8" y="20" width="32" height="20" fill="#681912" />
+          <rect x="12" y="14" width="24" height="28" fill="#681912" />
+          <rect x="6" y="18" width="34" height="16" fill="#a42817" />
+          <rect x="10" y="10" width="28" height="22" fill="#c6471e" />
+          <rect x="14" y="6" width="20" height="24" fill="#e66b27" />
+          <rect x="14" y="6" width="16" height="10" fill="#f49d23" />
+          <rect x="18" y="3" width="10" height="8" fill="#fed65b" />
+          <rect x="8" y="22" width="6" height="6" fill="#e66b27" />
+          <rect x="30" y="20" width="6" height="8" fill="#f49d23" />
+        </svg>
+    
+        <!-- Foreground Right Tree with Jeppy the Owl -->
+        <div class="tree tree-right">
+          <svg viewBox="0 0 48 64" width="100%" height="100%" shape-rendering="crispEdges">
+            <rect x="20" y="34" width="8" height="30" fill="#271108" />
+            <rect x="22" y="34" width="4" height="30" fill="#442113" />
+            <rect x="14" y="56" width="7" height="8" fill="#271108" />
+            <rect x="27" y="58" width="6" height="6" fill="#271108" />
+            <rect x="10" y="38" width="12" height="4" fill="#271108" />
+            <rect x="12" y="36" width="8" height="2" fill="#442113" />
+            <rect x="6" y="16" width="36" height="22" fill="#7a2a11" />
+            <rect x="10" y="10" width="28" height="26" fill="#af4014" />
+            <rect x="8" y="14" width="30" height="18" fill="#dd611d" />
+            <rect x="14" y="6" width="22" height="22" fill="#f49923" />
+            <rect x="18" y="2" width="14" height="14" fill="#ffd043" />
+            <rect x="4" y="22" width="8" height="8" fill="#af4014" />
+            <rect x="32" y="18" width="10" height="10" fill="#f49923" />
+          </svg>
+    
+          <!-- Owl perched on branch -->
+          <svg class="jeppy-owl" viewBox="0 0 10 10" shape-rendering="crispEdges">
+            <rect x="2" y="2" width="6" height="7" fill="#54301a" />
+            <rect x="2" y="0" width="2" height="2" fill="#381e0f" />
+            <rect x="6" y="0" width="2" height="2" fill="#381e0f" />
+            <rect x="3" y="5" width="4" height="4" fill="#deb887" />
+            <g class="jeppy-eyes" style="transform-origin: 5px 3px;">
+              <rect x="2" y="2" width="3" height="3" fill="#fff" />
+              <rect x="5" y="2" width="3" height="3" fill="#fff" />
+              <rect x="3" y="3" width="1" height="2" fill="#e69c24" />
+              <rect x="6" y="3" width="1" height="2" fill="#e69c24" />
+              <rect x="4" y="3" width="2" height="2" fill="#f25f1c" />
+            </g>
+          </svg>
+        </div>
+    
+        <!-- 1. DROPPED GROUND LEAF (Appears when timer awards a leaf) -->
+        <svg id="groundLeaf" class="ground-pickup-leaf" viewBox="0 0 12 12" shape-rendering="crispEdges">
+          <rect x="5" y="0" width="2" height="1" fill="#fed65b" />
+          <rect x="4" y="1" width="4" height="2" fill="#ffd043" />
+          <rect x="3" y="3" width="6" height="3" fill="#f49d23" />
+          <rect x="2" y="6" width="8" height="3" fill="#e66b27" />
+          <rect x="3" y="9" width="6" height="2" fill="#a3281b" />
+          <rect x="5" y="11" width="2" height="1" fill="#442113" />
+          <rect x="5" y="4" width="2" height="4" fill="#fed65b" />
+        </svg>
+    
+        <!-- 2. WALKING MASCOT (With Big Held Leaf) -->
+        <div class="ground-mascot" id="groundMascot">
+          <svg class="held-leaf" viewBox="0 0 12 12" shape-rendering="crispEdges">
+            <rect x="5" y="0" width="2" height="1" fill="#fed65b" />
+            <rect x="4" y="1" width="4" height="2" fill="#ffd043" />
+            <rect x="3" y="3" width="6" height="3" fill="#f49d23" />
+            <rect x="2" y="6" width="8" height="3" fill="#e66b27" />
+            <rect x="3" y="9" width="6" height="2" fill="#a3281b" />
+            <rect x="5" y="11" width="2" height="1" fill="#442113" />
+            <rect x="5" y="4" width="2" height="4" fill="#fed65b" />
+          </svg>
+          <img src="assets/mascot.svg" alt="Jeppy">
+        </div>
+    
+        <!-- 3. LARGE LEAF PILE (Always visible on ground) -->
+        <div class="leaf-pile stage-0" id="leafPile">
+          <svg viewBox="0 0 48 30" width="100%" height="100%" shape-rendering="crispEdges">
+            <!-- BASE: ALWAYS VISIBLE -->
+            <g class="lvl-base">
+              <rect x="2" y="27" width="44" height="3" fill="#200f09" />
+              <rect x="6" y="25" width="14" height="3" fill="#6d1910" />
+              <rect x="22" y="25" width="18" height="3" fill="#872910" />
+              <rect x="10" y="23" width="12" height="3" fill="#a3281b" />
+              <rect x="26" y="24" width="10" height="2" fill="#a42817" />
+              <rect x="38" y="20" width="2" height="8" fill="#442416" />
+              <rect x="35" y="16" width="8" height="5" fill="#f4b41b" />
+              <rect x="36" y="17" width="6" height="3" fill="#6d3a24" />
+            </g>
+            <!-- STAGE 1 -->
+            <g class="lvl lvl-1">
+              <rect x="4" y="22" width="16" height="4" fill="#a3281b" />
+              <rect x="18" y="21" width="18" height="4" fill="#cf4a17" />
+              <rect x="8" y="19" width="12" height="3" fill="#e66b27" />
+              <rect x="24" y="20" width="10" height="3" fill="#f49d23" />
+            </g>
+            <!-- STAGE 2 -->
+            <g class="lvl lvl-2">
+              <rect x="10" y="16" width="24" height="5" fill="#cf4a17" />
+              <rect x="14" y="14" width="18" height="4" fill="#e66b27" />
+              <rect x="16" y="12" width="12" height="3" fill="#f49d23" />
+              <rect x="6" y="18" width="8" height="3" fill="#a3281b" />
+              <rect x="30" y="18" width="8" height="3" fill="#e66b27" />
+            </g>
+            <!-- STAGE 3 -->
+            <g class="lvl lvl-3">
+              <rect x="12" y="10" width="22" height="5" fill="#e66b27" />
+              <rect x="14" y="8" width="18" height="4" fill="#f4b41b" />
+              <rect x="18" y="6" width="10" height="3" fill="#fed65b" />
+              <rect x="28" y="9" width="6" height="3" fill="#a3281b" />
+              <rect x="8" y="13" width="6" height="3" fill="#ffd043" />
+            </g>
+            <!-- STAGE 4 -->
+            <g class="lvl lvl-4">
+              <rect x="8" y="8" width="28" height="5" fill="#f49d23" />
+              <rect x="14" y="4" width="18" height="5" fill="#fed65b" />
+              <rect x="18" y="2" width="10" height="3" fill="#ffd043" />
+              <rect x="4" y="14" width="6" height="4" fill="#cf4a17" />
+              <rect x="34" y="13" width="8" height="4" fill="#f4b41b" />
+            </g>
+            <!-- STAGE 5 -->
+            <g class="lvl lvl-5">
+              <rect x="16" y="0" width="12" height="3" fill="#fed65b" />
+              <rect x="20" y="-2" width="4" height="2" fill="#ffd043" />
+              <rect x="0" y="24" width="6" height="3" fill="#e66b27" />
+              <rect x="42" y="24" width="6" height="3" fill="#f4b41b" />
+              <rect x="2" y="20" width="4" height="3" fill="#fed65b" />
+              <rect x="12" y="3" width="4" height="2" fill="#ffffff" />
+              <rect x="26" y="4" width="4" height="2" fill="#ffffff" />
+            </g>
+          </svg>
+        </div>
+    
+        <!-- Ground Floor Dirt Layer -->
+        <div class="pixel-ground">
+          <div class="pixel-grass-clumps"></div>
+        </div>
+      </div>
+      <!-- ==========================================================
+           END OF FOREST LAYER (Put <script> tags right below this)
+           ========================================================== -->
 
-    <!-- Background Tree 2 (Rust) -->
-    <svg class="tree tree-back-right" viewBox="0 0 32 48" shape-rendering="crispEdges">
-      <rect x="14" y="24" width="4" height="24" fill="#2b150c" />
-      <rect x="8" y="12" width="16" height="18" fill="#9e3019" />
-      <rect x="10" y="6" width="12" height="16" fill="#c7491d" />
-      <rect x="12" y="3" width="8" height="12" fill="#f47827" />
-    </svg>
-
-    <!-- Foreground Left Tree (Grand Crimson & Orange Tree) -->
-    <svg class="tree tree-left" viewBox="0 0 48 64" shape-rendering="crispEdges">
-      <!-- Trunk & Roots -->
-      <rect x="20" y="36" width="8" height="28" fill="#2d130a" />
-      <rect x="18" y="46" width="3" height="18" fill="#462012" />
-      <rect x="22" y="38" width="4" height="26" fill="#462012" />
-      <rect x="14" y="58" width="6" height="6" fill="#2d130a" />
-      <rect x="28" y="56" width="6" height="8" fill="#2d130a" />
-      
-      <!-- Foliage Shadows (Deep Rust/Brown) -->
-      <rect x="8" y="20" width="32" height="20" fill="#681912" />
-      <rect x="12" y="14" width="24" height="28" fill="#681912" />
-      
-      <!-- Mid Foliage (Pumpkin & Crimson) -->
-      <rect x="6" y="18" width="34" height="16" fill="#a42817" />
-      <rect x="10" y="10" width="28" height="22" fill="#c6471e" />
-      <rect x="14" y="6" width="20" height="24" fill="#e66b27" />
-      
-      <!-- Foliage Highlights (Golden Amber) -->
-      <rect x="14" y="6" width="16" height="10" fill="#f49d23" />
-      <rect x="18" y="3" width="10" height="8" fill="#fed65b" />
-      <rect x="8" y="22" width="6" height="6" fill="#e66b27" />
-      <rect x="30" y="20" width="6" height="8" fill="#f49d23" />
-    </svg>
-
-    <!-- Foreground Right Tree with Jeppy the Owl perched inside -->
-    <div class="tree tree-right">
-      <svg viewBox="0 0 48 64" width="100%" height="100%" shape-rendering="crispEdges">
-        <!-- Trunk & Branch -->
-        <rect x="20" y="34" width="8" height="30" fill="#271108" />
-        <rect x="22" y="34" width="4" height="30" fill="#442113" />
-        <rect x="14" y="56" width="7" height="8" fill="#271108" />
-        <rect x="27" y="58" width="6" height="6" fill="#271108" />
-        <!-- Big Branch to the left -->
-        <rect x="10" y="38" width="12" height="4" fill="#271108" />
-        <rect x="12" y="36" width="8" height="2" fill="#442113" />
-
-        <!-- Deep Amber Canopy Base -->
-        <rect x="6" y="16" width="36" height="22" fill="#7a2a11" />
-        <rect x="10" y="10" width="28" height="26" fill="#af4014" />
-        
-        <!-- Bright Foliage Layers -->
-        <rect x="8" y="14" width="30" height="18" fill="#dd611d" />
-        <rect x="14" y="6" width="22" height="22" fill="#f49923" />
-        <rect x="18" y="2" width="14" height="14" fill="#ffd043" />
-
-        <!-- Leaf clusters -->
-        <rect x="4" y="22" width="8" height="8" fill="#af4014" />
-        <rect x="32" y="18" width="10" height="10" fill="#f49923" />
-      </svg>
-
-      <!-- Jeppy the Owl perched on the branch -->
-      <svg class="jeppy-owl" viewBox="0 0 10 10" shape-rendering="crispEdges">
-        <!-- Owl Body -->
-        <rect x="2" y="2" width="6" height="7" fill="#54301a" />
-        <!-- Owl Ears -->
-        <rect x="2" y="0" width="2" height="2" fill="#381e0f" />
-        <rect x="6" y="0" width="2" height="2" fill="#381e0f" />
-        <!-- Belly -->
-        <rect x="3" y="5" width="4" height="4" fill="#deb887" />
-        <!-- Blinking Eyes Container -->
-        <g class="jeppy-eyes" style="transform-origin: 5px 3px;">
-          <rect x="2" y="2" width="3" height="3" fill="#fff" />
-          <rect x="5" y="2" width="3" height="3" fill="#fff" />
-          <rect x="3" y="3" width="1" height="2" fill="#e69c24" />
-          <rect x="6" y="3" width="1" height="2" fill="#e69c24" />
-          <rect x="4" y="3" width="2" height="2" fill="#f25f1c" />
-        </g>
-      </svg>
-    </div>
-    <!-- Put this inside <div class="forest-layer"> -->
-    <div class="ground-mascot">
-    <!-- Insert mascot.svg here or an <img> pointing to it -->
-    <img src="assets/mascot.svg" alt="Jeppy">
-    </div>
     <!-- Ground Floor -->
     <div class="pixel-ground">
       <div class="pixel-grass-clumps"></div>
