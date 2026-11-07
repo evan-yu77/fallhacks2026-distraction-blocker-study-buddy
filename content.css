@@ -1,51 +1,54 @@
-
 #sidekick {
     position: fixed;
-    bottom: 0;
+    bottom: 0px;
     left: 0;
-  
-    width: 120px;
-    height: 120px;
-  
+    width: 96px;
+    height: 96px;
     z-index: 2147483647;
     pointer-events: none;
-  
     display: none;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
   
-    animation: walk 18s ease-in-out infinite alternate;
+    /* Stepped pixel walk across screen */
+    animation: 
+      pixelPatrol 24s steps(180) infinite,
+      pixelBob 0.35s steps(2) infinite;
   }
   
-  #sidekick img {
+  #sidekick img, 
+  #sidekick svg {
     width: 100%;
     height: 100%;
     object-fit: contain;
-  
-    animation: jump 6s ease-in-out infinite;
   }
   
-  /* Mascot moves from left to right */
-  @keyframes walk {
+  /* Turns the mascot to face the direction it is walking */
+  @keyframes pixelPatrol {
     0% {
-      transform: translateX(10px);
+      transform: translateX(10px) scaleX(1);
     }
-  
+    48% {
+      transform: translateX(calc(100vw - 110px)) scaleX(1);
+    }
+    50% {
+      /* Flip horizontally when walking left */
+      transform: translateX(calc(100vw - 110px)) scaleX(-1);
+    }
+    98% {
+      transform: translateX(10px) scaleX(-1);
+    }
     100% {
-      transform: translateX(calc(100vw - 140px));
+      transform: translateX(10px) scaleX(1);
     }
   }
   
-  /* Mascot occasionally jumps */
-  @keyframes jump {
-    0%, 75%, 100% {
-      transform: translateY(0);
+  /* 2-frame 8-bit bobbing step */
+  @keyframes pixelBob {
+    0%, 100% {
+      margin-bottom: 0px;
     }
-  
-    85% {
-      transform: translateY(-35px);
-    }
-  
-    92% {
-      transform: translateY(0);
+    50% {
+      margin-bottom: 6px;
     }
   }
-  
