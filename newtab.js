@@ -199,6 +199,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   syncDashboard();
-  setInterval(syncDashboard, 1000);
+  setInterval(syncDashboard, 100);
   chrome.storage.onChanged.addListener(syncDashboard);
 });

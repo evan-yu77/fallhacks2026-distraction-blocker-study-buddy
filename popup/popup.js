@@ -189,5 +189,5 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   updateTimer();
-  setInterval(updateTimer, 1000);
+  setInterval(updateTimer, 100);
 });
