@@ -115,15 +115,19 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (!data.sessionActive) return;
 
+    // Safe fallbacks to prevent undefined math errors on startup
+    const durationMs = (data.studyDuration || 25) * 60 * 1000;
     let remaining;
+    
     if (data.sessionPaused) {
-      // If paused, freeze the clock using the saved remaining time
-      remaining = data.pausedRemainingTime;
+      remaining = data.pausedRemainingTime || 0;
     } else {
-      // If running, calculate dynamically based on the target end time
-      remaining = Math.max(0, data.sessionEndTime - Date.now());
+      // If sessionEndTime is missing, default to now so remaining = 0
+      const targetEnd = data.sessionEndTime || Date.now();
+      remaining = Math.max(0, targetEnd - Date.now());
     }
 
+    // Format the clock
     const totalSeconds = Math.ceil(remaining / 1000);
     const minutesLeft = Math.floor(totalSeconds / 60);
     const secondsLeft = totalSeconds % 60;
@@ -131,22 +135,30 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("timer").textContent =
       minutesLeft + ":" + String(secondsLeft).padStart(2, "0");
 
-    // Calculate leaves based on total time minus remaining time
-    // This perfectly handles pauses because 'remaining' is frozen while paused
-    const durationMs = data.studyDuration * 60 * 1000;
-    const elapsed = durationMs - remaining;
-    const leaves = Math.min(5, Math.floor(elapsed / (durationMs / 5)));
+    // Bulletproof Leaf Math
+    // Ensure elapsed time never drops below 0 or goes above durationMs
+    let elapsed = durationMs - remaining;
+    elapsed = Math.max(0, Math.min(elapsed, durationMs)); 
+    
+    // Calculates exactly which 1/5th interval we are in
+    const leaves = Math.floor(elapsed / (durationMs / 5));
 
     document.getElementById("leaves").textContent =
       "Leaves collected: " + leaves + " 🍃";
 
+    // End of Session handling
     if (remaining === 0 && !data.sessionPaused) {
       await chrome.storage.local.set({ sessionActive: false, sessionPaused: false });
       document.getElementById("timer").textContent = "Done!";
-      startBtn.textContent = "Start Studying";
-      pauseBtn.style.display = "none";
+      
+      // Reset buttons
+      const startBtn = document.getElementById("startBtn");
+      const pauseBtn = document.getElementById("pauseBtn");
+      if (startBtn) startBtn.textContent = "Start Studying";
+      if (pauseBtn) pauseBtn.style.display = "none";
     }
   }
+
 
   // 5. Attach Event Listeners
   startBtn.addEventListener("click", toggleTimer);
