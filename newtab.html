@@ -1,42 +1,194 @@
-
-<link rel="stylesheet" href="content.css">
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Stay On Track</title>
+  
+  <!-- External stylesheet if you still use it -->
+  <link rel="stylesheet" href="content.css">
+
   <style>
-    body {
-      background: #f4f8f5;
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding-top: 100px;
+    :root {
+      --bg: #f5f8f5;
+      --card-bg: #ffffff;
+      --text-main: #1f2923;
+      --text-muted: #5f6e65;
+      --accent-green: #2e7d4d;
+      --accent-soft: #e8f3ec;
+      --border: #e1e9e3;
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+      --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.06);
     }
 
-    input {
-      padding: 15px;
-      width: 400px;
-      border-radius: 25px;
-      border: 1px solid #ccc;
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      background-image: radial-gradient(circle at 50% 20%, #edf5ef 0%, var(--bg) 70%);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .dashboard-container {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
+
+    /* Header */
+    .header-text {
+      font-size: 1.35rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+      text-align: center;
+    }
+
+    /* Search Bar */
+    .search-form {
+      width: 100%;
+      position: relative;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 14px 20px 14px 44px;
+      font-size: 0.95rem;
+      color: var(--text-main);
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 9999px;
+      outline: none;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .search-input::placeholder {
+      color: #94a399;
+    }
+
+    .search-input:hover {
+      border-color: #cbd8cf;
+    }
+
+    .search-input:focus {
+      border-color: var(--accent-green);
+      box-shadow: 0 0 0 4px rgba(46, 125, 77, 0.12), var(--shadow-sm);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 17px;
+      height: 17px;
+      color: #8da094;
+      pointer-events: none;
+    }
+
+    /* Focus Timer Card */
+    .timer-container {
+      width: 100%;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px 24px;
+      text-align: center;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .timer-container h2 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
+
+    #timer {
+      font-size: 3.5rem;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      color: var(--text-main);
+      /* Keeps numbers from jittering as the timer updates */
+      font-variant-numeric: tabular-nums;
+      line-height: 1.1;
+      margin: 4px 0 10px;
+    }
+
+    /* Leaves Counter Pill */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--accent-soft);
+      color: var(--accent-green);
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .badge-icon {
+      width: 14px;
+      height: 14px;
     }
   </style>
 </head>
 <body>
-  <h1>Jeppy's Always Watching....</h1>
 
-  <form action="https://www.google.com/search">
-    <input
-      type="text"
-      name="q"
-      placeholder="Search Google..."
-    >
-  </form>
+  <main class="dashboard-container">
+    <h1 class="header-text">Jeppy’s Always Watching...</h1>
+
+    <!-- Search Bar -->
+    <form class="search-form" action="https://www.google.com/search" method="GET">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input
+        class="search-input"
+        type="text"
+        name="q"
+        placeholder="Search Google..."
+        autocomplete="off"
+      >
+    </form>
+
+    <!-- Timer Card -->
+    <section class="timer-container">
+      <h2>Focus Timer</h2>
+      <h1 id="timer">25:00</h1>
+      
+      <div class="badge">
+        <svg class="badge-icon" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22l1-2.3A4.49 4.49 0 0 0 8 20C19 20 22 3 22 3c-1 2-8 2.25-13 3.25S2 11.5 2 13.5s1.75 3.75 1.75 3.75C7 8 17 8 17 8z"/>
+        </svg>
+        <span id="leaves">Leaves collected: 0</span>
+      </div>
+    </section>
+  </main>
 
   <script src="content.js"></script>
+  <script src="newtab.js"></script>
 </body>
-<div class="timer-container">
-    <h2>Focus Timer</h2>
-    <h1 id="timer">25:00</h1>
-    <p id="leaves"> Leaves collected: 0</p>
-  </div>
-<script src="newtab.js"></script>
 </html>
