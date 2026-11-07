@@ -1,62 +1,3 @@
-
-async function updateTimer() {
-    const data = await chrome.storage.local.get([
-      "sessionActive",
-      "sessionStartTime",
-      "sessionEndTime",
-      "studyDuration"
-    ]);
-  
-    const timer = document.getElementById("timer");
-    const leavesDisplay = document.getElementById("leaves");
-  
-    if (!timer || !leavesDisplay) return;
-  
-    if (!data.sessionActive) {
-      timer.textContent = "Ready to study!";
-      return;
-    }
-  
-    const remaining = Math.max(
-      0,
-      data.sessionEndTime - Date.now()
-    );
-  
-    const totalSeconds = Math.ceil(remaining / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-  
-    timer.textContent =
-      minutes + ":" + String(seconds).padStart(2, "0");
-  
-    const duration = data.studyDuration * 60 * 1000;
-    const elapsed = Math.max(
-      0,
-      Date.now() - data.sessionStartTime
-    );
-  
-    const leaves = Math.min(
-      5,
-      Math.floor(elapsed / (duration / 5))
-    );
-  
-    leavesDisplay.textContent =
-      "🍃 Leaves collected: " + leaves;
-  
-    if (remaining === 0) {
-      timer.textContent = "Break time! 🎉";
-  
-      await chrome.storage.local.set({
-        sessionActive: false
-      });
-    }
-  }
-  
-  updateTimer();
-  setInterval(updateTimer, 1000);
-  
-  chrome.storage.onChanged.addListener(updateTimer);
-  
 document.addEventListener("DOMContentLoaded", () => {
     
     function syncDashboard() {
@@ -64,27 +5,21 @@ document.addEventListener("DOMContentLoaded", () => {
             "sessionActive", 
             "sessionPaused", 
             "sessionEndTime", 
-            "pausedRemainingTime", 
-            "leafCount"
+            "studyDuration",
+            "pausedRemainingTime"
         ], (data) => {
             
-            // 1. Sync the Leaves
-            const leaves = data.leafCount || 0;
-            const leafElement = document.getElementById("leaves"); 
-            
-            if (leafElement) {
-                leafElement.textContent = `Leaves collected: ${leaves} 🍃`;
-            }
-
-            // 2. Sync the Timer display
             const timerElement = document.getElementById("timer");
-            if (!timerElement) return;
+            const leafElement = document.getElementById("leaves");
 
+            // If no session is running, reset to 0
             if (!data.sessionActive) {
-                timerElement.textContent = "00:00";
+                if (timerElement) timerElement.textContent = "00:00";
+                if (leafElement) leafElement.textContent = "Leaves collected: 0 🍃";
                 return;
             }
 
+            // 1. Calculate Time Remaining
             let remainingMs = 0;
             if (data.sessionPaused) {
                 remainingMs = data.pausedRemainingTime || 0;
@@ -97,11 +32,28 @@ document.addEventListener("DOMContentLoaded", () => {
             const minutesLeft = Math.floor(totalSecondsLeft / 60);
             const secondsLeft = totalSecondsLeft % 60;
 
-            timerElement.textContent = minutesLeft + ":" + String(secondsLeft).padStart(2, "0");
+            if (timerElement) {
+                timerElement.textContent = minutesLeft + ":" + String(secondsLeft).padStart(2, "0");
+            }
+
+            // 2. Self-Sufficient Bulletproof Leaf Math
+            // (Calculates safely based on remaining time so it never flashes 5)
+            const totalDurationSeconds = (data.studyDuration || 25) * 60;
+            const elapsedSeconds = Math.max(0, totalDurationSeconds - totalSecondsLeft);
+            
+            const secondsPerLeaf = totalDurationSeconds / 5;
+            let leaves = Math.floor(elapsedSeconds / secondsPerLeaf);
+            
+            // Clamp the leaves between 0 and 5
+            leaves = Math.max(0, Math.min(leaves, 5));
+
+            if (leafElement) {
+                leafElement.textContent = `Leaves collected: ${leaves} 🍃`;
+            }
         });
     }
 
     // Run immediately, then check storage every second
     syncDashboard();
     setInterval(syncDashboard, 1000);
-  });
+});
