@@ -77,103 +77,40 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // 4. MAIN SYNC LOOP
+  // 4. MAIN SYNC LOOP - uses shared state with popup.
   async function syncDashboard() {
-    const data = await chrome.storage.local.get([
-      "sessionActive",
-      "sessionPaused",
-      "sessionEndTime",
-      "pausedRemainingTime",
-      "leafCount",
-      "isBreakActive",
-      "breakEndTime"
-    ]);
+    const data = await SidekickTimer.read();
+    const isBreak = data.sessionActive && data.sessionPhase === 'break';
+    const remainingMs = data.sessionActive ? SidekickTimer.remaining(data) : 0;
+    const totalSecs = Math.ceil(remainingMs / 1000);
+    const mins = Math.floor(totalSecs / 60);
+    const secs = totalSecs % 60;
 
-    // CHECK A: Is User in an Active Break?
-    if (data.isBreakActive) {
-      const breakRemaining = Math.max(0, (data.breakEndTime || Date.now()) - Date.now());
-      const totalSec = Math.ceil(breakRemaining / 1000);
-      const mins = Math.floor(totalSec / 60);
-      const secs = totalSec % 60;
-
-      if (breakRemaining > 0) {
-        setZenBreakMode(true, mins, secs);
-        return;
-      } else {
-        // Break has finished!
-        await chrome.storage.local.set({ isBreakActive: false });
-        setZenBreakMode(false);
-        alarmPlayed = false;
-      }
-    }
-
-    // CHECK B: Inactive / Idle Timer
-    if (!data.sessionActive) {
-      setZenBreakMode(false);
-      if (timerElement) timerElement.textContent = "00:00";
-      if (leavesDisplay) leavesDisplay.textContent = "Leaves collected: 0 🍃";
-      updateLeafPile(0);
-      lastKnownLeaves = 0;
-      return;
-    }
-
-    // CHECK C: Active Focus Timer Running
-    setZenBreakMode(false);
-
-    let remainingMs = 0;
-    if (data.sessionPaused) {
-      remainingMs = data.pausedRemainingTime || 0;
-    } else {
-      const targetEnd = data.sessionEndTime || Date.now();
-      remainingMs = Math.max(0, targetEnd - Date.now());
-    }
-
-    const totalSecondsLeft = Math.ceil(remainingMs / 1000);
-    const minutesLeft = Math.floor(totalSecondsLeft / 60);
-    const secondsLeft = totalSecondsLeft % 60;
-
-    // TIME'S UP! Start Custom Zen Break
-    if (remainingMs <= 0 && !data.sessionPaused) {
+    if (isBreak) {
+      setZenBreakMode(true, mins, secs);
       if (!alarmPlayed && alarmSound) {
         alarmSound.play().catch(() => {});
         alarmPlayed = true;
       }
-
-      // Fetch the custom break duration from storage, default to 5 mins if not found
-      const breakData = await chrome.storage.local.get(["breakDurationMs"]);
-      const breakDuration = breakData.breakDurationMs || (5 * 60 * 1000);
-      
-      const breakMins = Math.floor(breakDuration / (60 * 1000));
-      const breakSecs = Math.floor((breakDuration % (60 * 1000)) / 1000);
-
-      await chrome.storage.local.set({
-        sessionActive: false,
-        isBreakActive: true,
-        breakEndTime: Date.now() + breakDuration
-      });
-
-      setZenBreakMode(true, breakMins, breakSecs);
       return;
     }
-
-    // Display Focus Timer
-    if (timerElement) {
-      timerElement.textContent = `${minutesLeft}:${String(secondsLeft).padStart(2, "0")}`;
+    alarmPlayed = false;
+    setZenBreakMode(false);
+    if (!data.sessionActive) {
+      if (timerElement) timerElement.textContent = data.sessionPhase === 'done' ? 'Done!' : '00:00';
+      if (leavesDisplay) leavesDisplay.textContent = data.sessionPhase === 'done' ? 'Session complete! 🍃' : 'Leaves collected: 0 🍃';
+      if (data.sessionPhase !== 'done') updateLeafPile(0);
+      lastKnownLeaves = data.sessionPhase === 'done' ? 5 : 0;
+      return;
     }
-
-    // Leaves Management
-    const currentLeaves = data.leafCount ?? 0;
-    if (leavesDisplay) {
-      leavesDisplay.textContent = `Leaves collected: ${currentLeaves} 🍃`;
-    }
-
+    if (timerElement) timerElement.textContent = SidekickTimer.format(remainingMs);
+    const durationMs = (data.studyDuration || 25) * 60000;
+    const currentLeaves = Math.min(5, Math.floor(Math.max(0, durationMs - remainingMs) / (durationMs / 5)));
+    if (leavesDisplay) leavesDisplay.textContent = `Leaves collected: ${currentLeaves} 🍃`;
     if (lastKnownLeaves === null) {
       lastKnownLeaves = currentLeaves;
       updateLeafPile(currentLeaves);
-      return;
-    }
-
-    if (currentLeaves > lastKnownLeaves) {
+    } else if (currentLeaves > lastKnownLeaves) {
       triggerPickupAnimation(currentLeaves);
       lastKnownLeaves = currentLeaves;
     } else if (currentLeaves < lastKnownLeaves) {
@@ -186,8 +123,9 @@ document.addEventListener("DOMContentLoaded", () => {
   if (endBreakBtn) {
     endBreakBtn.addEventListener("click", async () => {
       await chrome.storage.local.set({
-        isBreakActive: false,
+        sessionPhase: "idle",
         sessionActive: false,
+        sessionPaused: false,
         leafCount: 0
       });
       alarmPlayed = false;
@@ -199,6 +137,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   syncDashboard();
-  setInterval(syncDashboard, 100);
+  setInterval(syncDashboard, 500);
   chrome.storage.onChanged.addListener(syncDashboard);
 });

@@ -16,14 +16,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (data.sessionActive) {
       // STOP
-      await chrome.storage.local.set({ sessionActive: false, sessionPaused: false, leafCount: 0 });
+      await chrome.storage.local.set({ sessionActive: false, sessionPaused: false, sessionPhase: "idle", leafCount: 0 });
       startBtn.textContent = "Start";
       pauseBtn.style.display = "none";
       pauseBtn.textContent = "Pause";
       
       document.getElementById("timer").textContent = "00:00";
       document.getElementById("leaves").textContent = "Leaves collected: 0 🍃";
-      chrome.runtime.sendMessage({ action: "stop" }); 
+      chrome.runtime.sendMessage({ action: "stop" }).catch(() => {}); 
       
     } else {
       // START 
@@ -48,14 +48,16 @@ document.addEventListener("DOMContentLoaded", async () => {
         studyDuration: totalMinutes,
         breakDurationMs: breakDurationMs,
         pausedRemainingTime: 0,
-        leafCount: 0 
+        leafCount: 0,
+        isBreakActive: false,
+        breakEndTime: null
       });
 
       startBtn.textContent = "Stop";
       pauseBtn.style.display = "inline-block";
       pauseBtn.textContent = "Pause";
       
-      chrome.runtime.sendMessage({ action: "start", duration: totalMinutes, remaining: totalMinutes });
+      chrome.runtime.sendMessage({ action: "start", duration: totalMinutes, remaining: totalMinutes }).catch(() => {});
       updateTimer();
     }
   }
@@ -78,75 +80,46 @@ document.addEventListener("DOMContentLoaded", async () => {
       
       const remainingMins = dataPaused.pausedRemainingTime / 60000;
       const totalMins = data.sessionPhase === "focus" ? data.studyDuration : (data.breakDurationMs / 60000);
-      chrome.runtime.sendMessage({ action: "start", duration: totalMins, remaining: remainingMins });
+      chrome.runtime.sendMessage({ action: "start", duration: totalMins, remaining: remainingMins }).catch(() => {});
 
     } else {
       // PAUSE
       const remainingTime = Math.max(0, data.sessionEndTime - Date.now());
       await chrome.storage.local.set({ sessionPaused: true, pausedRemainingTime: remainingTime });
       pauseBtn.textContent = "Resume";
-      chrome.runtime.sendMessage({ action: "stop" });
+      chrome.runtime.sendMessage({ action: "stop" }).catch(() => {});
     }
   }
 
-  // TIMER & LEAF MATH
+  // Both views read exactly the same stored focus/break phase.
+  let previousPhase = null;
   async function updateTimer() {
-    const data = await chrome.storage.local.get([
-      "sessionActive", "sessionPaused", "sessionEndTime", "studyDuration", "pausedRemainingTime", "sessionPhase", "breakDurationMs"
-    ]);
-
-    if (!data.sessionActive) return;
-
-    let remainingMs = 0;
-    if (data.sessionPaused) {
-      remainingMs = data.pausedRemainingTime || 0;
-    } else {
-      const targetEnd = data.sessionEndTime || Date.now();
-      remainingMs = Math.max(0, targetEnd - Date.now());
+    const data = await SidekickTimer.read();
+    const active = Boolean(data.sessionActive);
+    startBtn.textContent = active ? "Stop" : "Start";
+    pauseBtn.style.display = active ? "inline-block" : "none";
+    pauseBtn.textContent = data.sessionPaused ? "Resume" : "Pause";
+    if (!active) {
+      document.getElementById("timer").textContent = data.sessionPhase === 'done' ? "Done!" : "00:00";
+      document.getElementById("leaves").textContent = data.sessionPhase === 'done' ? "Session complete! 🍃" : "Leaves collected: 0 🍃";
+      previousPhase = data.sessionPhase;
+      return;
     }
-
-    const totalSecondsLeft = Math.ceil(remainingMs / 1000);
-    const minutesLeft = Math.floor(totalSecondsLeft / 60);
-    const secondsLeft = totalSecondsLeft % 60;
-
-    document.getElementById("timer").textContent = minutesLeft + ":" + String(secondsLeft).padStart(2, "0");
-
-    // UI Updates based on Phase
-    if (data.sessionPhase === "break") {
-        document.getElementById("leaves").textContent = "☕ Break Time!";
-    } else {
-        const totalDurationSeconds = (data.studyDuration || 25) * 60;
-        const elapsedSeconds = Math.max(0, totalDurationSeconds - totalSecondsLeft);
-        
-        const secondsPerLeaf = totalDurationSeconds / 5;
-        let leaves = Math.floor(elapsedSeconds / secondsPerLeaf);
-        leaves = Math.max(0, Math.min(leaves, 5));
-        
-        document.getElementById("leaves").textContent = `Leaves collected: ${leaves} 🍃`;
-        chrome.storage.local.set({ leafCount: leaves });
-    }
-
-    // END OF SESSION CHECK
-    if (remainingMs <= 0 && !data.sessionPaused) {
-      const alarm = document.getElementById("alarmSound");
-      if (alarm) alarm.play().catch(e => console.log("Audio blocked:", e));
-
-      if (data.sessionPhase === "focus" && data.breakDurationMs > 0) {
-        // Automatically switch to Break Timer!
-        const newEndTime = Date.now() + data.breakDurationMs;
-        await chrome.storage.local.set({ sessionPhase: "break", sessionEndTime: newEndTime });
-        
-        const breakMins = data.breakDurationMs / 60000;
-        chrome.runtime.sendMessage({ action: "start", duration: breakMins, remaining: breakMins });
-        
-      } else {
-        // Completely Done
-        await chrome.storage.local.set({ sessionActive: false, sessionPaused: false });
-        document.getElementById("timer").textContent = "Done!";
-        startBtn.textContent = "Start";
-        pauseBtn.style.display = "none";
+    document.getElementById("timer").textContent = SidekickTimer.format(SidekickTimer.remaining(data));
+    if (data.sessionPhase === 'break') {
+      document.getElementById("leaves").textContent = "☕ Break Time!";
+      if (previousPhase === 'focus') {
+        const alarm = document.getElementById('alarmSound');
+        if (alarm) alarm.play().catch(() => {});
       }
+    } else {
+      const durationMs = (data.studyDuration || 25) * 60000;
+      const elapsedMs = Math.max(0, durationMs - SidekickTimer.remaining(data));
+      const leaves = Math.min(5, Math.floor(elapsedMs / (durationMs / 5)));
+      document.getElementById("leaves").textContent = `Leaves collected: ${leaves} 🍃`;
+      if (data.leafCount !== leaves) await chrome.storage.local.set({leafCount: leaves});
     }
+    previousPhase = data.sessionPhase;
   }
 
   startBtn.addEventListener("click", toggleTimer);
@@ -189,5 +162,5 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   updateTimer();
-  setInterval(updateTimer, 100);
+  setInterval(updateTimer, 500);
 });
