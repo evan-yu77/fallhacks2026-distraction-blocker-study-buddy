@@ -1,25 +1,27 @@
 document.addEventListener('DOMContentLoaded', () => {
     const closeBtn = document.getElementById('closeBtn');
-    
+  
     closeBtn.addEventListener('click', () => {
-        // Attempts to go back to the previous safe page
-        if (window.history.length > 1) {
-            window.history.back();
-        } else {
-            // If they opened the blocked site in a new tab, close the tab entirely
-            window.close();
-        }
-    });
-});
-
-// add close button functionality to popup.html
-document.addEventListener('DOMContentLoaded', () => {
-    const closeBtn = document.getElementById('closeBtn');
-    
-    closeBtn.addEventListener('click', () => {
-        // Query the extension for the current tab and remove it
+      // 1. Try to close via Chrome Extension Tabs API first
+      if (chrome && chrome.tabs && chrome.tabs.getCurrent) {
         chrome.tabs.getCurrent((tab) => {
+          if (tab && tab.id) {
             chrome.tabs.remove(tab.id);
+            return;
+          }
+          fallbackClose();
         });
+      } else {
+        fallbackClose();
+      }
     });
-});
+  
+    function fallbackClose() {
+      // 2. If blocked page was reached via navigation, go back. Otherwise close.
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        window.close();
+      }
+    }
+  });
