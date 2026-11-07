@@ -126,38 +126,76 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Call it immediately so the list loads when you open the popup
   renderBlocklist();
 
-  // Both views read exactly the same stored focus/break phase.
+ // Both views read exactly the same stored focus/break phase.
   let previousPhase = null;
   async function updateTimer() {
     const data = await SidekickTimer.read();
-    document.body.classList.toggle(
-      "is-break",
-      data.sessionActive && data.sessionPhase === "break"
-    );
+    
+    document.body.classList.toggle("is-break", data.sessionActive && data.sessionPhase === "break");
+    
     const active = Boolean(data.sessionActive);
     startBtn.textContent = active ? "Stop" : "Start";
     pauseBtn.style.display = active ? "inline-block" : "none";
     pauseBtn.textContent = data.sessionPaused ? "Resume" : "Pause";
+    
     if (!active) {
       document.getElementById("timer").textContent = data.sessionPhase === 'done' ? "Done!" : "00:00";
       document.getElementById("leaves").textContent = data.sessionPhase === 'done' ? "Session complete! 🍃" : "Leaves collected: 0 🍃";
       previousPhase = data.sessionPhase;
       return;
     }
-    document.getElementById("timer").textContent = SidekickTimer.format(SidekickTimer.remaining(data));
+
+    const remainingMs = SidekickTimer.remaining(data);
+    document.getElementById("timer").textContent = SidekickTimer.format(remainingMs);
+
+    // --- THE MISSING END OF SESSION & HISTORY CHECK ---
+    if (remainingMs <= 0 && !data.sessionPaused) {
+      const alarm = new Audio(chrome.runtime.getURL("assets/alarm.mp3"));
+      alarm.play().catch(e => console.log("Audio blocked:", e));
+
+      if (data.sessionPhase === "focus") {
+        
+        // Log History (with 5-second cooldown to prevent double-logging)
+        const histData = await chrome.storage.local.get(["studyHistory"]);
+        const history = histData.studyHistory || [];
+        const now = Date.now();
+        
+        if (history.length === 0 || now - (history[0].timestamp || 0) > 5000) {
+          history.unshift({
+            date: new Date().toLocaleDateString(),
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            duration: Math.round(data.studyDuration),
+            leaves: data.leafCount || 5,
+            timestamp: now
+          });
+          if (history.length > 10) history.pop(); 
+          await chrome.storage.local.set({ studyHistory: history });
+        }
+
+        // Switch to Break Timer OR Complete Session
+        if (data.breakDurationMs > 0) {
+            const newEndTime = Date.now() + data.breakDurationMs;
+            await chrome.storage.local.set({ sessionPhase: "break", sessionEndTime: newEndTime });
+            
+            const breakMins = data.breakDurationMs / 60000;
+            chrome.runtime.sendMessage({ action: "start", duration: breakMins, remaining: breakMins }).catch(() => {});
+        } else {
+            await chrome.storage.local.set({ sessionActive: false, sessionPaused: false, sessionPhase: "done" });
+        }
+      }
+      return;
+    }
+
     if (data.sessionPhase === 'break') {
       document.getElementById("leaves").textContent = "☕ Break Time!";
-      if (previousPhase === 'focus') {
-        const alarm = document.getElementById('alarmSound');
-        if (alarm) alarm.play().catch(() => {});
-      }
     } else {
       const durationMs = (data.studyDuration || 25) * 60000;
-      const elapsedMs = Math.max(0, durationMs - SidekickTimer.remaining(data));
+      const elapsedMs = Math.max(0, durationMs - remainingMs);
       const leaves = Math.min(5, Math.floor(elapsedMs / (durationMs / 5)));
       document.getElementById("leaves").textContent = `Leaves collected: ${leaves} 🍃`;
       if (data.leafCount !== leaves) await chrome.storage.local.set({leafCount: leaves});
     }
+    
     previousPhase = data.sessionPhase;
   }
 
@@ -197,7 +235,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         siteInput.value = "";
 
         renderBlocklist();
-        
+
         setTimeout(() => { status.style.display = "none"; }, 2000);
       });
     });

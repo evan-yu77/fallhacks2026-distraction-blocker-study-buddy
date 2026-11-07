@@ -5,7 +5,8 @@
     width: 96px;
     height: 96px;
     z-index: 2147483647;
-    pointer-events: none;
+    pointer-events: auto !important; /* Changed so we can click Jeppy! */
+    cursor: pointer;                 /* Shows the hand icon */
     display: none;
     image-rendering: pixelated;
     image-rendering: crisp-edges;
@@ -14,41 +15,66 @@
     animation: 
       pixelPatrol 24s steps(180) infinite,
       pixelBob 0.35s steps(2) infinite;
-  }
+}
   
-  #sidekick img, 
-  #sidekick svg {
+#sidekick img, 
+#sidekick svg {
     width: 100%;
     height: 100%;
     object-fit: contain;
-  }
+}
   
-  /* Turns the mascot to face the direction it is walking */
-  @keyframes pixelPatrol {
-    0% {
-      transform: translateX(10px) scaleX(1);
-    }
-    48% {
-      transform: translateX(calc(100vw - 110px)) scaleX(1);
-    }
-    50% {
-      /* Flip horizontally when walking left */
-      transform: translateX(calc(100vw - 110px)) scaleX(-1);
-    }
-    98% {
-      transform: translateX(10px) scaleX(-1);
-    }
-    100% {
-      transform: translateX(10px) scaleX(1);
-    }
-  }
+/* Turns the mascot to face the direction it is walking */
+@keyframes pixelPatrol {
+    0% { transform: translateX(10px) scaleX(1); }
+    48% { transform: translateX(calc(100vw - 110px)) scaleX(1); }
+    50% { transform: translateX(calc(100vw - 110px)) scaleX(-1); }
+    98% { transform: translateX(10px) scaleX(-1); }
+    100% { transform: translateX(10px) scaleX(1); }
+}
   
-  /* 2-frame 8-bit bobbing step */
-  @keyframes pixelBob {
-    0%, 100% {
-      margin-bottom: 0px;
-    }
-    50% {
-      margin-bottom: 6px;
-    }
-  }
+/* 2-frame 8-bit bobbing step */
+@keyframes pixelBob {
+    0%, 100% { margin-bottom: 0px; }
+    50% { margin-bottom: 6px; }
+}
+
+/* ==========================================================
+   NEW: History Modal UI
+   ========================================================== */
+#sidekick-log-modal {
+    position: fixed;
+    bottom: 110px; /* Floats right above Jeppy */
+    right: 20px;
+    width: 260px;
+    background: #fff0d4;
+    border: 4px solid #27140b;
+    box-shadow: 4px 4px 0px rgba(0,0,0,0.4);
+    padding: 15px;
+    z-index: 2147483647;
+    font-family: 'Courier New', monospace; /* Safe retro fallback for content scripts */
+    color: #27140b;
+}
+
+#sidekick-log-modal h3 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    font-weight: bold;
+    border-bottom: 2px dashed #d5a575;
+    padding-bottom: 8px;
+}
+
+#sidekick-log-modal ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+#sidekick-log-modal li {
+    font-size: 12px;
+    font-weight: bold;
+    padding: 8px 0;
+    border-bottom: 1px dashed #d5a575;
+}

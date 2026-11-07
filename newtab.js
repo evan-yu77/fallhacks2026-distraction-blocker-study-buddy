@@ -80,6 +80,45 @@ document.addEventListener("DOMContentLoaded", () => {
   // 4. MAIN SYNC LOOP - uses shared state with popup.
   async function syncDashboard() {
     const data = await SidekickTimer.read();
+
+    // --- NEW: THE MISSING END OF SESSION & HISTORY CHECK ---
+    if (data.sessionActive && !data.sessionPaused && SidekickTimer.remaining(data) <= 0) {
+      if (data.sessionPhase === "focus") {
+        
+        // Log History (with 5-second cooldown to prevent double-logging with popup)
+        const histData = await chrome.storage.local.get(["studyHistory"]);
+        const history = histData.studyHistory || [];
+        const now = Date.now();
+        
+        if (history.length === 0 || now - (history[0].timestamp || 0) > 5000) {
+          history.unshift({
+            date: new Date().toLocaleDateString(),
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            duration: Math.round(data.studyDuration || 0),
+            leaves: data.leafCount || 5,
+            timestamp: now
+          });
+          if (history.length > 10) history.pop(); 
+          await chrome.storage.local.set({ studyHistory: history });
+        }
+
+        // Switch to Break Timer OR Complete Session
+        if (data.breakDurationMs > 0) {
+            const newEndTime = Date.now() + data.breakDurationMs;
+            await chrome.storage.local.set({ sessionPhase: "break", sessionEndTime: newEndTime });
+            const breakMins = data.breakDurationMs / 60000;
+            chrome.runtime.sendMessage({ action: "start", duration: breakMins, remaining: breakMins }).catch(() => {});
+        } else {
+            await chrome.storage.local.set({ sessionActive: false, sessionPaused: false, sessionPhase: "done" });
+        }
+      } else if (data.sessionPhase === "break") {
+        // End the break
+        await chrome.storage.local.set({ sessionActive: false, sessionPaused: false, sessionPhase: "done" });
+      }
+      return; // Exit this loop tick and wait for the new state to load
+    }
+    // --------------------------------------------------
+
     const isBreak = data.sessionActive && data.sessionPhase === 'break';
     const remainingMs = data.sessionActive ? SidekickTimer.remaining(data) : 0;
     const totalSecs = Math.ceil(remainingMs / 1000);
@@ -94,8 +133,10 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       return;
     }
+    
     alarmPlayed = false;
     setZenBreakMode(false);
+    
     if (!data.sessionActive) {
       if (timerElement) timerElement.textContent = data.sessionPhase === 'done' ? 'Done!' : '00:00';
       if (leavesDisplay) leavesDisplay.textContent = data.sessionPhase === 'done' ? 'Session complete! 🍃' : 'Leaves collected: 0 🍃';
@@ -103,10 +144,12 @@ document.addEventListener("DOMContentLoaded", () => {
       lastKnownLeaves = data.sessionPhase === 'done' ? 5 : 0;
       return;
     }
+    
     if (timerElement) timerElement.textContent = SidekickTimer.format(remainingMs);
     const durationMs = (data.studyDuration || 25) * 60000;
     const currentLeaves = Math.min(5, Math.floor(Math.max(0, durationMs - remainingMs) / (durationMs / 5)));
     if (leavesDisplay) leavesDisplay.textContent = `Leaves collected: ${currentLeaves} 🍃`;
+    
     if (lastKnownLeaves === null) {
       lastKnownLeaves = currentLeaves;
       updateLeafPile(currentLeaves);
