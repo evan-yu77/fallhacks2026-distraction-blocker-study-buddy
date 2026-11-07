@@ -460,28 +460,29 @@
 
     <!-- Duration Input & Start Study Button -->
     <div class="time-input-group">
+      
       <!-- Focus Row -->
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <span style="font-size: 8px; color: var(--wood-dark);">FOCUS:</span>
-        <div>
-          <input id="minutes" type="number" value="25" min="0" placeholder="Min">
+        <div style="display: flex; align-items: center; gap: 4px;">
+          <input id="minutes" type="number" value="25" min="0" style="width: 55px; text-align: center; padding: 8px 4px;">
           <span style="color: var(--wood-dark); font-weight: bold;">:</span>
-          <input id="seconds" type="number" value="00" min="0" max="59" placeholder="Sec">
+          <input id="seconds" type="number" value="00" min="0" max="59" style="width: 55px; text-align: center; padding: 8px 4px;">
         </div>
       </div>
 
       <!-- Break Row -->
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <span style="font-size: 8px; color: var(--wood-dark);">BREAK:</span>
-        <div>
-          <input id="breakMinutes" type="number" value="05" min="0" placeholder="Min">
+        <div style="display: flex; align-items: center; gap: 4px;">
+          <input id="breakMinutes" type="number" value="05" min="0" style="width: 55px; text-align: center; padding: 8px 4px;">
           <span style="color: var(--wood-dark); font-weight: bold;">:</span>
-          <input id="breakSeconds" type="number" value="00" min="0" max="59" placeholder="Sec">
+          <input id="breakSeconds" type="number" value="00" min="0" max="59" style="width: 55px; text-align: center; padding: 8px 4px;">
         </div>
       </div>
 
       <!-- Buttons -->
-      <div style="display: flex; gap: 8px; margin-top: 4px;">
+      <div style="display: flex; gap: 8px; margin-top: 4px; width: 100%;">
         <button id="startBtn" style="flex: 1;">Start</button>
         <button id="pauseBtn" style="flex: 1; display: none;">Pause</button>
       </div>
