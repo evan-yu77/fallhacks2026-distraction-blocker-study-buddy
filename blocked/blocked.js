@@ -12,3 +12,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+// add close button functionality to popup.html
+document.addEventListener('DOMContentLoaded', () => {
+    const closeBtn = document.getElementById('closeBtn');
+    
+    closeBtn.addEventListener('click', () => {
+        // Query the extension for the current tab and remove it
+        chrome.tabs.getCurrent((tab) => {
+            chrome.tabs.remove(tab.id);
+        });
+    });
+});
