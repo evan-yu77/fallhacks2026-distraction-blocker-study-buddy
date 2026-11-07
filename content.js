@@ -36,4 +36,4 @@ chrome.storage.onChanged.addListener(() => {
 });
 
 // Also check whether the end time has passed
-setInterval(updateMascot, 1000);
+setInterval(updateMascot, 1000); 
