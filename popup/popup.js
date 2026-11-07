@@ -57,30 +57,60 @@ async function updateTimer() {
 
 document.getElementById("start").addEventListener("click", startTimer);
 
-// implement the blocklist functionality 
-document.getElementById('saveBtn').addEventListener('click', () => {
-    const siteInput = document.getElementById('siteInput');
-    const siteToBlock = siteInput.value.trim();
-    
-    if (siteToBlock) {
-        // Retrieve the current blocklist, add the new site, and save it back to storage
-        chrome.storage.local.get(['blockedSites'], (result) => {
-            let sites = result.blockedSites || [];
-            // Ensure the site isn't already in the blocklist
-            if (!sites.includes(siteToBlock)) {
-                sites.push(siteToBlock);
-                chrome.storage.local.set({ 'blockedSites': sites }, () => {
-                    const status = document.getElementById('saveStatus');
-                    status.style.display = 'block';
-                    siteInput.value = '';
-                    
-                    setTimeout(() => {
-                        status.style.display = 'none';
-                    }, 2000);
-                });
-            }
-        });
+document.getElementById("saveBtn").addEventListener("click", () => {
+  const siteInput = document.getElementById("siteInput");
+  const status = document.getElementById("saveStatus");
+  let hostname;
+
+  try {
+    const value = siteInput.value.trim();
+    if (!value) throw new Error("Enter a website to block.");
+
+    const url = new URL(value.includes("://") ? value : `https://${value}`);
+    hostname = url.hostname.toLowerCase().replace(/^www\./, "");
+    if (!hostname) throw new Error("Enter a valid website.");
+  } catch (error) {
+    status.textContent = error.message || "Enter a valid website.";
+    status.style.color = "red";
+    status.style.display = "block";
+    return;
+  }
+
+  chrome.storage.local.get(["blockedSites"], (result) => {
+    if (chrome.runtime.lastError) {
+      status.textContent = "Could not read the blocklist.";
+      status.style.color = "red";
+      status.style.display = "block";
+      console.error(chrome.runtime.lastError.message);
+      return;
     }
+
+    const sites = result.blockedSites || [];
+    if (sites.includes(hostname)) {
+      status.textContent = `${hostname} is already blocked.`;
+      status.style.color = "red";
+      status.style.display = "block";
+      return;
+    }
+
+    chrome.storage.local.set({ blockedSites: [...sites, hostname] }, () => {
+      if (chrome.runtime.lastError) {
+        status.textContent = "Could not save the blocklist.";
+        status.style.color = "red";
+        status.style.display = "block";
+        console.error(chrome.runtime.lastError.message);
+        return;
+      }
+
+      status.textContent = `${hostname} added to blocklist.`;
+      status.style.color = "green";
+      status.style.display = "block";
+      siteInput.value = "";
+      setTimeout(() => {
+        status.style.display = "none";
+      }, 2000);
+    });
+  });
 });
 
 

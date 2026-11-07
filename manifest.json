@@ -4,7 +4,11 @@
   "version": "1.0",
   "description": "Your personal study assistant",
 
-  "permissions": ["storage"],
+  "permissions": ["storage", "tabs"],
+
+  "background": {
+    "service_worker": "background.js"
+  },
 
   "action": {
     "default_popup": "popup/popup.html"
