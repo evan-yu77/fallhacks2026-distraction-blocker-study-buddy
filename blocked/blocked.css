@@ -1,0 +1,53 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    background-color: #ff3333; /* Aggressive red background */
+    color: white;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    overflow: hidden; /* Prevents scrollbars when mascot grows */
+}
+
+h1 {
+    font-size: 3rem;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+}
+
+#angry-mascot {
+    width: 200px;
+    margin: 40px 0;
+    /* Runs the animation continuously back and forth */
+    animation: rageJump 0.4s infinite alternate ease-in-out; 
+}
+
+/* The jumping and growing animation */
+@keyframes rageJump {
+    0% {
+        transform: scale(1) translateY(0) rotate(-10deg);
+    }
+    100% {
+        transform: scale(2.5) translateY(-30px) rotate(10deg);
+    }
+}
+
+button {
+    padding: 15px 30px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    background-color: white;
+    color: #ff3333;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    transition: transform 0.1s;
+}
+
+button:hover {
+    transform: scale(1.05);
+}
