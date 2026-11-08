@@ -14,22 +14,20 @@ document.documentElement.appendChild(mascot);
 let logModal = null;
 
 mascot.addEventListener('click', (e) => {
-    // Stop the website from intercepting or ignoring the click
     e.preventDefault();
     e.stopPropagation();
 
-    // If it's already open, close it
+    // Instead of deleting the modal, we toggle visibility.
+    // This keeps the YouTube iframe alive and playing in the background!
     if (logModal) {
-        logModal.remove();
-        logModal = null;
+        logModal.style.display = logModal.style.display === 'none' ? 'block' : 'none';
         return;
     }
 
-    // Build the UI
+    // Build the UI (only happens the first time you click)
     logModal = document.createElement('div');
     logModal.id = 'sidekick-log-modal';
     
-    // Hackathon trick: Apply critical CSS directly via JS so no website can override it
     logModal.style.cssText = `
         position: fixed !important;
         bottom: 110px !important;
@@ -45,18 +43,17 @@ mascot.addEventListener('click', (e) => {
         display: block !important;
     `;
     
+    // --- 1. HISTORY SECTION ---
     const header = document.createElement('h3');
     header.textContent = "📖 Study History";
     header.style.cssText = "margin: 0 0 10px 0; font-size: 14px; font-weight: bold; border-bottom: 2px dashed #d5a575; padding-bottom: 8px;";
     logModal.appendChild(header);
 
     const list = document.createElement('ul');
-    list.style.cssText = "list-style: none; padding: 0; margin: 0; max-height: 150px; overflow-y: auto;";
+    list.style.cssText = "list-style: none; padding: 0; margin: 0; max-height: 100px; overflow-y: auto;";
     
-    // Fetch the history we just saved in popup.js
     chrome.storage.local.get(['studyHistory'], (result) => {
         const history = result.studyHistory || [];
-        
         if (history.length === 0) {
             list.innerHTML = "<li style='font-size: 12px; padding: 8px 0;'>No sessions completed yet.</li>";
         } else {
@@ -68,10 +65,8 @@ mascot.addEventListener('click', (e) => {
             });
         }
     });
-
     logModal.appendChild(list);
-    
-    // Append to body instead of documentElement for better compatibility
+
     document.body.appendChild(logModal);
 });
 
@@ -127,11 +122,7 @@ async function updateMascot() {
   
   mascot.style.display = "block"; 
   
-  // Clean up the modal if the timer stops
-  if (!isStudying && logModal) {
-      logModal.remove();
-      logModal = null;
-  }
+  
 }
 
 updateMascot();

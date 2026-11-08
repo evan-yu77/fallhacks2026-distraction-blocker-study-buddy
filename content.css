@@ -5,8 +5,8 @@
     width: 96px;
     height: 96px;
     z-index: 2147483647;
-    pointer-events: auto !important; /* Changed so we can click Jeppy! */
-    cursor: pointer;                 /* Shows the hand icon */
+    pointer-events: auto !important; 
+    cursor: pointer;                
     display: none;
     image-rendering: pixelated;
     image-rendering: crisp-edges;
@@ -39,9 +39,7 @@
     50% { margin-bottom: 6px; }
 }
 
-/* ==========================================================
-   NEW: History Modal UI
-   ========================================================== */
+
 #sidekick-log-modal {
     position: fixed;
     bottom: 110px; /* Floats right above Jeppy */
