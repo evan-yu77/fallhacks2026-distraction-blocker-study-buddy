@@ -74,6 +74,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (timerElement) timerElement.textContent = "DONE! 🎉";
     if (hudStatus) hudStatus.textContent = "Session Complete!";
 
+    // Show the completed pile before Jepi jumps into it.
+    updateLeafPile(5);
+
     // A. Start mascot sprint & leap
     groundMascot.classList.remove("gathering", "has-leaf");
     groundMascot.classList.add("leaf-dive");
@@ -93,22 +96,14 @@ document.addEventListener("DOMContentLoaded", () => {
       showFloatingBadge("BREAK TIME! 🍂", "dive-popup-text");
     }, 1400);
 
-    // C. At 3.2s: Celebration finishes -> Transition to Zen Garden Sanctuary
-    setTimeout(async () => {
+    // C. After the celebration, show Zen mode using the SHARED break timer.
+    // The break countdown started when focus ended, not after the animation.
+    setTimeout(() => {
       groundMascot.classList.remove("leaf-dive");
       leafPile.classList.remove("splash");
       if (leafBurst) leafBurst.classList.remove("active");
       isDiving = false;
-
-      // Launch 5-minute Zen Break
-      const breakDuration = 5 * 60 * 1000;
-      await chrome.storage.local.set({
-        sessionActive: false,
-        isBreakActive: true,
-        breakEndTime: Date.now() + breakDuration
-      });
-
-      setZenBreakMode(true, 5, 0);
+      syncDashboard();
     }, 3200);
   }
 
@@ -131,104 +126,80 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // 5. MAIN SYNC LOOP
+  // 5. MAIN SYNC LOOP - same phase and deadline as the popup.
+  let previousPhase = null;
+  let lastSessionEndTime = null;
+  let lastCelebratedFocusDeadline = null;
+
   async function syncDashboard() {
-    const data = await chrome.storage.local.get([
-      "sessionActive",
-      "sessionPaused",
-      "sessionEndTime",
-      "pausedRemainingTime",
-      "leafCount",
-      "isBreakActive",
-      "breakEndTime"
-    ]);
+    // The shared helper transitions focus -> break -> done and reads storage.
+    const data = await SidekickTimer.read();
+    const phase = data.sessionActive ? data.sessionPhase : (data.sessionPhase || "idle");
+    const remainingMs = data.sessionActive ? SidekickTimer.remaining(data) : 0;
 
-    // CHECK A: Is Break Active?
-    if (data.isBreakActive) {
-      const breakRemaining = Math.max(0, (data.breakEndTime || Date.now()) - Date.now());
-      const totalSec = Math.ceil(breakRemaining / 1000);
-      const mins = Math.floor(totalSec / 60);
-      const secs = totalSec % 60;
-
-      if (breakRemaining > 0) {
-        setZenBreakMode(true, mins, secs);
-        return;
-      } else {
-        // Break ended
-        await chrome.storage.local.set({ isBreakActive: false });
-        setZenBreakMode(false);
-        alarmPlayed = false;
-      }
-    }
-
-    // CHECK B: Inactive / Idle Timer
-    if (!data.sessionActive) {
-      if (!isDiving) {
-        setZenBreakMode(false);
-        if (timerElement) timerElement.textContent = "00:00";
-        if (leavesDisplay) leavesDisplay.textContent = "Leaves collected: 0 🍃";
-        updateLeafPile(0);
-        lastKnownLeaves = 0;
-      }
-      return;
-    }
-
-    // CHECK C: Active Session Countdown
-    setZenBreakMode(false);
-
-    let remainingMs = 0;
-    if (data.sessionPaused) {
-      remainingMs = data.pausedRemainingTime || 0;
-    } else {
-      const targetEnd = data.sessionEndTime || Date.now();
-      remainingMs = Math.max(0, targetEnd - Date.now());
-    }
-
-    const totalSecondsLeft = Math.ceil(remainingMs / 1000);
-    const minutesLeft = Math.floor(totalSecondsLeft / 60);
-    const secondsLeft = totalSecondsLeft % 60;
-
-    // TIME'S UP! TRIGGER DIVE CELEBRATION
-    if (remainingMs <= 0 && !data.sessionPaused) {
-      if (!isDiving) {
+    // Only celebrate when this open page observes a focus -> break change.
+    // A newly opened tab midway through a break should show Zen immediately.
+    if (phase === "break") {
+      // Celebrate once per completed focus session, on the visible New Tab.
+      // The break deadline is focus deadline + saved break duration.
+      const focusDeadline = data.sessionEndTime - (data.breakDurationMs || 0);
+      if (previousPhase === "focus" &&
+          lastCelebratedFocusDeadline !== focusDeadline &&
+          !isDiving) {
+        lastCelebratedFocusDeadline = focusDeadline;
+        previousPhase = "break";
         triggerLeafDiveCelebration();
       }
+      if (isDiving) return;
+      const totalSec = Math.ceil(remainingMs / 1000);
+      setZenBreakMode(true, Math.floor(totalSec / 60), totalSec % 60);
+      previousPhase = "break";
       return;
     }
 
-    if (timerElement && !isDiving) {
-      timerElement.textContent = `${minutesLeft}:${String(secondsLeft).padStart(2, "0")}`;
+    if (isDiving) return;
+    setZenBreakMode(false);
+
+    if (!data.sessionActive) {
+      if (timerElement) timerElement.textContent = phase === "done" ? "Done!" : "00:00";
+      if (leavesDisplay) leavesDisplay.textContent = phase === "done" ? "Session complete! 🍃" : "Leaves collected: 0 🍃";
+      if (phase !== "done") updateLeafPile(0);
+      lastKnownLeaves = phase === "done" ? 5 : 0;
+      previousPhase = phase;
+      return;
     }
 
-    // Leaves Management
-    const currentLeaves = data.leafCount ?? 0;
-    if (leavesDisplay) {
-      leavesDisplay.textContent = `Leaves collected: ${currentLeaves} 🍃`;
-    }
+    if (timerElement) timerElement.textContent = SidekickTimer.format(remainingMs);
+    const durationMs = (data.studyDuration || 25) * 60000;
+    const elapsedMs = Math.max(0, durationMs - remainingMs);
+    const currentLeaves = Math.min(5, Math.floor(elapsedMs / (durationMs / 5)));
+    if (leavesDisplay) leavesDisplay.textContent = `Leaves collected: ${currentLeaves} 🍃`;
 
-    if (lastKnownLeaves === null) {
+    if (previousPhase !== "focus" || lastSessionEndTime !== data.sessionEndTime) {
       lastKnownLeaves = currentLeaves;
       updateLeafPile(currentLeaves);
-      return;
-    }
-
-    if (currentLeaves > lastKnownLeaves) {
+    } else if (currentLeaves > lastKnownLeaves) {
       triggerPickupAnimation(currentLeaves);
       lastKnownLeaves = currentLeaves;
     } else if (currentLeaves < lastKnownLeaves) {
       lastKnownLeaves = currentLeaves;
       updateLeafPile(currentLeaves);
     }
+    lastSessionEndTime = data.sessionEndTime;
+    previousPhase = "focus";
   }
 
   // 6. "LOCK BACK IN" (End Break Button)
   if (endBreakBtn) {
     endBreakBtn.addEventListener("click", async () => {
       await chrome.storage.local.set({
-        isBreakActive: false,
         sessionActive: false,
+        sessionPaused: false,
+        sessionPhase: "idle",
         leafCount: 0
       });
+      previousPhase = "idle";
+      lastCelebratedFocusDeadline = null;
       alarmPlayed = false;
       isDiving = false;
       setZenBreakMode(false);
